@@ -292,7 +292,8 @@ def game():
     player.x, player.y = (492, 1818)
     player_dx, player_dy = (0, 0)
     player_speed = 3
-    player_animation = Animation("mouse-walk", (160, 160), 6, 4)
+    player_animation = [Animation("mouse-walk", (160, 160), 6, 4), Animation("mouse-front", (160, 160), 3, 8)]
+    player_animation_index = 0
 
     dialog = ""
 
@@ -354,9 +355,16 @@ def game():
         player.update(dt)
         player.check_collision(dt, npc.get_rect())
         if (player.vx, player.vy) == (0, 0):
-            player_animation.reset()
+            for animation in player_animation:
+                animation.reset()
         else:
-            player_animation.update(dt)
+            if player_animation_index == 0 and player_dx == 0 and player_dy == 1:
+                player_animation_index = 1
+                player_animation[player_animation_index].reset()
+            elif player_animation_index == 1 and player_dx != 0:
+                player_animation_index = 0
+                player_animation[player_animation_index].reset()
+            player_animation[player_animation_index].update(dt)
 
         # update camera
         camera_x, camera_y = player.get_x() + camera_offset_x + int((mouse_x - screen_center[0]) * mouse_sensitivity), player.get_y() + camera_offset_y + int((mouse_y - screen_center[1]) * mouse_sensitivity)
@@ -366,7 +374,7 @@ def game():
         clear_display()
 
         display.blit(get_image("b_background", True), (0 - camera_x, 0 - camera_y))
-        display.blit(pygame.transform.flip(player_animation.get_image(), player.vx < 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
+        display.blit(pygame.transform.flip(player_animation[player_animation_index].get_image(), player.vx < 0 and player_animation_index == 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
         display.blit(pygame.transform.flip(npc_animation.get_image(), False, False), (npc.get_x() - camera_x, npc.get_y() - camera_y))
 
         if dialog != "":
