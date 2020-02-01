@@ -271,7 +271,7 @@ class Entity():
 def game():
     running = True
 
-    player = Entity("player", True)
+    player = Entity("mouse", True)
     player.x, player.y = (492, 1818)
     player_dx, player_dy = (0, 0)
     player_speed = 3
