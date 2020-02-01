@@ -309,6 +309,7 @@ def game():
     player_speed = 3
     player_animation = [Animation("mouse-walk", (120, 160), 6, 4), Animation("mouse-front", (120, 160), 3, 8), Animation("mouse-back", (120, 160), 3, 8)]
     player_animation_index = 0
+    most_recent_dx = 0
 
     disp_dialog = False
     dialog_buffer = []
@@ -319,13 +320,26 @@ def game():
     dialog_timer = 0
     dialog_char_rate = 4
 
+    dialog_index = -1
     dialog_questions = ["What is your name?", "Do you know who the heck has the corona virus?", "You wanna buy some deathsticks?"]
     kill_prompt = False
 
-    npc = Entity((100, 160))
-    npc_animation = Animation("bunny", (100, 160), 3, 16)
-    npc.x, npc.y = (1354, 3243)
-    npc_dialog = ["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."]
+    npcs = []
+    npc_behaviors = []
+    npc_animations = []
+    npc_dialogs = []
+
+    npcs.append(Entity((100, 160)))
+    npcs[0].x, npcs[0].y = (1354, 3243)
+    npc_behaviors.append([True, False])
+    npc_animations.append(Animation("bunny", (100, 160), 3, 16))
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+
+    npcs.append(Entity((100, 160)))
+    npcs[1].x, npcs[1].y = (1480, 2340)
+    npc_behaviors.append([True, 0.5, (npcs[1].x, npcs[1].y), (1913, 2340)])
+    npc_animations.append(Animation("turtle", (100, 160), 4, 16))
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
 
     camera_x, camera_y = (0, 0)
     screen_center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2)
@@ -408,7 +422,7 @@ def game():
                                 clicked_dialog = False
                                 for i in range(0, len(dialog_questions)):
                                     if point_in_rect((mouse_x, mouse_y), (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60)):
-                                        dialog_buffer = split_dialog(npc_dialog[i + 1])
+                                        dialog_buffer = split_dialog(npc_dialogs[dialog_index][i + 1])
                                         display_dialog_one = ""
                                         display_dialog_two = ""
                                         dialog_one = dialog_buffer[0]
@@ -422,6 +436,7 @@ def game():
                                         break
                                 if not clicked_dialog:
                                     disp_dialog = False
+                                    dialog_index = -1
                         else:
                             dialog_one = dialog_buffer[0]
                             if len(dialog_buffer) > 1:
@@ -438,20 +453,24 @@ def game():
                         dialog_one = ""
                         dialog_two = ""
                 else:
-                    if point_in_rect((mouse_x + camera_x, mouse_y + camera_y), npc.get_rect()) and get_distance(player.get_center(), npc.get_center()) <= 200:
-                        dialog = npc_dialog[0]
-                        dialog_buffer = split_dialog(dialog)
-                        display_dialog_one = ""
-                        display_dialog_two = ""
-                        dialog_one = dialog_buffer[0]
-                        if len(dialog_buffer) > 1:
-                            dialog_two = dialog_buffer[1]
-                            dialog_buffer = dialog_buffer[2:]
-                        else:
-                            dialog_two = ""
-                            dialog_buffer = []
-                        disp_dialog = True
-                        player_dx, player_dy = (0, 0)
+                    for i in range(0, len(npcs)):
+                        if point_in_rect((mouse_x + camera_x, mouse_y + camera_y), npcs[i].get_rect()) and get_distance(player.get_center(), npcs[i].get_center()) <= 200:
+                            dialog_index = i
+                            if len(npc_behaviors[i]) == 4:
+                                npc_animations[dialog_index].reset()
+                            dialog = npc_dialogs[dialog_index][0]
+                            dialog_buffer = split_dialog(dialog)
+                            display_dialog_one = ""
+                            display_dialog_two = ""
+                            dialog_one = dialog_buffer[0]
+                            if len(dialog_buffer) > 1:
+                                dialog_two = dialog_buffer[1]
+                                dialog_buffer = dialog_buffer[2:]
+                            else:
+                                dialog_two = ""
+                                dialog_buffer = []
+                            disp_dialog = True
+                            player_dx, player_dy = (0, 0)
 
         # Update
         if disp_dialog:
@@ -462,6 +481,7 @@ def game():
                 display_dialog_one = ""
                 display_dialog_two = ""
                 dialog_buffer = []
+                dialog_index = -1
             else:
                 if dialog_one != "":
                     dialog_timer += dt
@@ -477,11 +497,14 @@ def game():
                         dialog_two = dialog_two[1:]
 
         # update player
+        if player_dx != 0:
+            most_recent_dx = player_dx
         player.vx, player.vy = scale_vector((player_dx, player_dy), player_speed)
         player.update(dt)
         for collider in map_colliders:
             player.check_collision(dt, collider)
-        player.check_collision(dt, npc.get_rect())
+        for i in range(0, len(npcs)):
+            player.check_collision(dt, npcs[i].get_rect())
         if (player.vx, player.vy) == (0, 0):
             for animation in player_animation:
                 animation.reset()
@@ -505,7 +528,24 @@ def game():
                     player_animation[player_animation_index].reset()
             player_animation[player_animation_index].update(dt)
 
-        npc_animation.update(dt)
+        for i in range(0, len(npcs)):
+            if i != dialog_index:
+                npcs[i].update(dt)
+                npcs[i].check_collision(dt, player.get_rect())
+            if not (i == dialog_index and len(npc_behaviors[i]) == 4):
+                npc_animations[i].update(dt)
+            if len(npc_behaviors[i]) != 2:
+                if npc_behaviors[i][0]:
+                    if npcs[i].vx > 0:
+                        if npcs[i].x >= npc_behaviors[i][3][0]:
+                            npcs[i].x = npc_behaviors[i][3][0]
+                            npcs[i].vx *= -1
+                    elif npcs[i].vx < 0:
+                        if npcs[i].x <= npc_behaviors[i][2][0]:
+                            npcs[i].x = npc_behaviors[i][2][0]
+                            npcs[i].vx *= -1
+                    else:
+                        npcs[i].vx = 1
 
         # update camera
         if not disp_dialog:
@@ -516,8 +556,18 @@ def game():
         clear_display()
 
         display.blit(get_image("background_scaled", False), (0 - camera_x, 0 - camera_y))
-        display.blit(pygame.transform.flip(player_animation[player_animation_index].get_image(), player.vx < 0 and player_animation_index == 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
-        display.blit(pygame.transform.flip(npc_animation.get_image(), False, False), (npc.get_x() - camera_x, npc.get_y() - camera_y))
+        display.blit(pygame.transform.flip(player_animation[player_animation_index].get_image(), most_recent_dx < 0 and player_animation_index == 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
+        for i in range(0, len(npcs)):
+            flip_x = False
+            flip_y = False
+            if len(npc_behaviors[i]) != 2:
+                if npc_behaviors[i][0]:
+                    flip_x = npcs[i].vx < 0
+                else:
+                    flip_y = npcs[i].vy < 0
+            else:
+                flip_x, flip_y = npc_behaviors[i]
+            display.blit(pygame.transform.flip(npc_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
 
         if disp_dialog:
             pygame.draw.rect(display, BLUE, (int(1280 * 0.1), 0, int(1280 * 0.8), 120))
