@@ -168,6 +168,7 @@ class Animation():
 # Fonts
 font_small = pygame.font.SysFont("Serif", 11)
 font_dialog = pygame.font.Font("res/ttf/oxygen.ttf", 32)
+font_title = pygame.font.Font("res/ttf/oxygen.ttf", 72)
 
 
 def split_dialog(dialog):
@@ -187,7 +188,8 @@ def split_dialog(dialog):
 
 # game states
 EXIT = -1
-MAIN_LOOP = 0
+MENU = 0
+MAIN_LOOP = 1
 
 
 def get_distance(point1, point2):
@@ -303,6 +305,7 @@ class Entity():
 
 def game():
     running = True
+    next_state = EXIT
 
     player = Entity((120, 160))
     player.x, player.y = (968, 3922)
@@ -421,7 +424,8 @@ def game():
                     text = font_dialog.render("Exit", False, WHITE)
                     rect = (screen_center[0] - (text.get_width() // 2) - 10, int(DISPLAY_HEIGHT * 0.75) - 5, text.get_width() + 20, text.get_height() + 10)
                     if point_in_rect((mouse_x, mouse_y), rect):
-                        sys.exit()
+                        next_state = MENU
+                        running = False
                     continue
                 if disp_dialog:
                     if dialog_one == "" and dialog_two == "":
@@ -675,6 +679,42 @@ def game():
         flip_display()
         tick()
 
+    if next_state == MENU:
+        menu()
+
+
+def menu():
+    running = True
+    next_state = EXIT
+
+    pygame.mixer.music.load("res/bgm/menu.mp3")
+    pygame.mixer.music.play(-1)
+
+    screen_center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2)
+    title_text = font_title.render("Critter Contagion", False, WHITE)
+
+    while running:
+        handle_input()
+        while len(input_queue) != 0:
+            event = input_queue.pop()
+            if event == ("left click", True):
+                running = False
+                next_state = MAIN_LOOP
+
+        # Render
+        clear_display()
+
+        display.blit(title_text, (screen_center[0] - (title_text.get_width() // 2), int(DISPLAY_HEIGHT * 0.15)))
+
+        if show_fps:
+            render_fps()
+        flip_display()
+        tick()
+
+    pygame.mixer.music.stop()
+    if next_state == MAIN_LOOP:
+        game()
+
 
 def handle_input():
     global mouse_x, mouse_y
@@ -767,5 +807,7 @@ def tick():
 if __name__ == "__main__":
     before_time = pygame.time.get_ticks()
     before_sec = before_time
-    game()
+    # game()
+    menu()
+    pygame.mixer.music.stop()
     pygame.quit()
