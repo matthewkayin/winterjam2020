@@ -2,6 +2,7 @@ import pygame
 import sys
 import os
 import math
+import random
 
 # Handle cli flags
 windowed = "--windowed" in sys.argv
@@ -341,6 +342,18 @@ def game():
     npc_animations.append(Animation("turtle", (100, 160), 4, 16))
     npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
 
+    sick_npc = random.randint(0, len(npcs) - 1)
+    chosen_npc = -1
+
+    success_message = "Wow you heckin did it you found the right boi. The town is saved, but he is dead, which is sad."
+    failed_message = "Wow you fucking monster you actually killed him you killed him and he wasn't even the right one you sick fuck I hope you're happy."
+    end_message = ""
+    end_message_buffer = []
+    end_message_display = []
+    end_screen_surface = None
+    fade_alpha = 0
+    fade_alpha_inc_rate = 0
+
     camera_x, camera_y = (0, 0)
     screen_center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2)
     camera_offset_x, camera_offset_y = (player.width // 2) - screen_center[0], (player.height // 2) - screen_center[1]
@@ -354,6 +367,8 @@ def game():
     map_colliders.append((1476, 3196, 1144, 900))
     map_colliders.append((0, -1, 4096, 1))
     map_colliders.append((0, 4096, 4096, 1))
+
+    print(sick_npc)
 
     while running:
         # Handle input
@@ -402,6 +417,12 @@ def game():
                         dialog_two = ""
                         dialog_buffer = []
             elif event == ("left click", True):
+                if chosen_npc != -1:
+                    text = font_dialog.render("Exit", False, WHITE)
+                    rect = (screen_center[0] - (text.get_width() // 2) - 10, int(DISPLAY_HEIGHT * 0.75) - 5, text.get_width() + 20, text.get_height() + 10)
+                    if point_in_rect((mouse_x, mouse_y), rect):
+                        sys.exit()
+                    continue
                 if disp_dialog:
                     if dialog_one == "" and dialog_two == "":
                         if len(dialog_buffer) == 0:
@@ -409,7 +430,18 @@ def game():
                                 for i in range(0, 2):
                                     if point_in_rect((mouse_x, mouse_y), (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60)):
                                         if i == 0:
-                                            print("kill action")
+                                            chosen_npc = dialog_index
+                                            if chosen_npc == sick_npc:
+                                                end_message_buffer = split_dialog(success_message)
+                                            else:
+                                                end_message_buffer = split_dialog(failed_message)
+                                            end_screen_surface = display.copy()
+                                            fade_alpha = 0
+                                            npc_target_x = screen_center[0] - (npcs[chosen_npc].width // 2) + camera_x
+                                            npc_target_y = screen_center[1] - (npcs[chosen_npc].height // 2) + camera_y
+                                            npc_x = npcs[chosen_npc].x
+                                            npc_y = npcs[chosen_npc].y
+                                            fade_alpha_inc_rate = 255 / (get_distance((npc_x, npc_y), (npc_target_x, npc_target_y)) / 3)
                                         else:
                                             kill_prompt = False
                                             disp_dialog = False
@@ -418,6 +450,7 @@ def game():
                                             dialog_one = ""
                                             dialog_two = ""
                                             dialog_buffer = []
+                                            dialog_index = -1
                             else:
                                 clicked_dialog = False
                                 for i in range(0, len(dialog_questions)):
@@ -473,124 +506,169 @@ def game():
                             player_dx, player_dy = (0, 0)
 
         # Update
-        if disp_dialog:
-            if (player_dx, player_dy) != (0, 0):
-                disp_dialog = False
-                dialog_one = ""
-                dialog_two = ""
-                display_dialog_one = ""
-                display_dialog_two = ""
-                dialog_buffer = []
-                dialog_index = -1
+        if chosen_npc == -1:
+            if disp_dialog:
+                if (player_dx, player_dy) != (0, 0):
+                    disp_dialog = False
+                    dialog_one = ""
+                    dialog_two = ""
+                    display_dialog_one = ""
+                    display_dialog_two = ""
+                    dialog_buffer = []
+                    dialog_index = -1
+                else:
+                    if dialog_one != "":
+                        dialog_timer += dt
+                        if dialog_timer >= dialog_char_rate:
+                            dialog_timer -= dialog_char_rate
+                            display_dialog_one += dialog_one[0]
+                            dialog_one = dialog_one[1:]
+                    elif dialog_two != "":
+                        dialog_timer += dt
+                        if dialog_timer >= dialog_char_rate:
+                            dialog_timer -= dialog_char_rate
+                            display_dialog_two += dialog_two[0]
+                            dialog_two = dialog_two[1:]
+
+            # update player
+            if player_dx != 0:
+                most_recent_dx = player_dx
+            player.vx, player.vy = scale_vector((player_dx, player_dy), player_speed)
+            player.update(dt)
+            for collider in map_colliders:
+                player.check_collision(dt, collider)
+            for i in range(0, len(npcs)):
+                player.check_collision(dt, npcs[i].get_rect())
+            if (player.vx, player.vy) == (0, 0):
+                for animation in player_animation:
+                    animation.reset()
             else:
-                if dialog_one != "":
-                    dialog_timer += dt
-                    if dialog_timer >= dialog_char_rate:
-                        dialog_timer -= dialog_char_rate
-                        display_dialog_one += dialog_one[0]
-                        dialog_one = dialog_one[1:]
-                elif dialog_two != "":
-                    dialog_timer += dt
-                    if dialog_timer >= dialog_char_rate:
-                        dialog_timer -= dialog_char_rate
-                        display_dialog_two += dialog_two[0]
-                        dialog_two = dialog_two[1:]
+                if player_animation_index == 0 and player_dx == 0:
+                    if player_dy == 1:
+                        player_animation_index = 1
+                    elif player_dy == -1:
+                        player_animation_index = 2
+                    player_animation[player_animation_index].reset()
+                elif (player_animation_index == 1 or player_animation_index == 2) and player_dx != 0:
+                    player_animation_index = 0
+                    player_animation[player_animation_index].reset()
+                elif player_animation_index == 1 and player_dx == 0:
+                    if player_dy == -1:
+                        player_animation_index = 2
+                        player_animation[player_animation_index].reset()
+                elif player_animation_index == 2 and player_dx == 0:
+                    if player_dy == 1:
+                        player_animation_index = 1
+                        player_animation[player_animation_index].reset()
+                player_animation[player_animation_index].update(dt)
 
-        # update player
-        if player_dx != 0:
-            most_recent_dx = player_dx
-        player.vx, player.vy = scale_vector((player_dx, player_dy), player_speed)
-        player.update(dt)
-        for collider in map_colliders:
-            player.check_collision(dt, collider)
-        for i in range(0, len(npcs)):
-            player.check_collision(dt, npcs[i].get_rect())
-        if (player.vx, player.vy) == (0, 0):
-            for animation in player_animation:
-                animation.reset()
+            for i in range(0, len(npcs)):
+                if i != dialog_index:
+                    npcs[i].update(dt)
+                    npcs[i].check_collision(dt, player.get_rect())
+                if not (i == dialog_index and len(npc_behaviors[i]) == 4):
+                    npc_animations[i].update(dt)
+                if len(npc_behaviors[i]) != 2:
+                    if npc_behaviors[i][0]:
+                        if npcs[i].vx > 0:
+                            if npcs[i].x >= npc_behaviors[i][3][0]:
+                                npcs[i].x = npc_behaviors[i][3][0]
+                                npcs[i].vx *= -1
+                        elif npcs[i].vx < 0:
+                            if npcs[i].x <= npc_behaviors[i][2][0]:
+                                npcs[i].x = npc_behaviors[i][2][0]
+                                npcs[i].vx *= -1
+                        else:
+                            npcs[i].vx = 1
+
+            # update camera
+            if not disp_dialog:
+                camera_x, camera_y = player.get_x() + camera_offset_x + int((mouse_x - screen_center[0]) * mouse_sensitivity), player.get_y() + camera_offset_y + int((mouse_y - screen_center[1]) * mouse_sensitivity)
+                camera_x, camera_y = max(min(camera_x, 4096 - DISPLAY_WIDTH), 0), max(min(camera_y, 4096 - DISPLAY_HEIGHT), 0)
         else:
-            if player_animation_index == 0 and player_dx == 0:
-                if player_dy == 1:
-                    player_animation_index = 1
-                elif player_dy == -1:
-                    player_animation_index = 2
-                player_animation[player_animation_index].reset()
-            elif (player_animation_index == 1 or player_animation_index == 2) and player_dx != 0:
-                player_animation_index = 0
-                player_animation[player_animation_index].reset()
-            elif player_animation_index == 1 and player_dx == 0:
-                if player_dy == -1:
-                    player_animation_index = 2
-                    player_animation[player_animation_index].reset()
-            elif player_animation_index == 2 and player_dx == 0:
-                if player_dy == 1:
-                    player_animation_index = 1
-                    player_animation[player_animation_index].reset()
-            player_animation[player_animation_index].update(dt)
-
-        for i in range(0, len(npcs)):
-            if i != dialog_index:
-                npcs[i].update(dt)
-                npcs[i].check_collision(dt, player.get_rect())
-            if not (i == dialog_index and len(npc_behaviors[i]) == 4):
-                npc_animations[i].update(dt)
-            if len(npc_behaviors[i]) != 2:
-                if npc_behaviors[i][0]:
-                    if npcs[i].vx > 0:
-                        if npcs[i].x >= npc_behaviors[i][3][0]:
-                            npcs[i].x = npc_behaviors[i][3][0]
-                            npcs[i].vx *= -1
-                    elif npcs[i].vx < 0:
-                        if npcs[i].x <= npc_behaviors[i][2][0]:
-                            npcs[i].x = npc_behaviors[i][2][0]
-                            npcs[i].vx *= -1
-                    else:
-                        npcs[i].vx = 1
-
-        # update camera
-        if not disp_dialog:
-            camera_x, camera_y = player.get_x() + camera_offset_x + int((mouse_x - screen_center[0]) * mouse_sensitivity), player.get_y() + camera_offset_y + int((mouse_y - screen_center[1]) * mouse_sensitivity)
-            camera_x, camera_y = max(min(camera_x, 4096 - DISPLAY_WIDTH), 0), max(min(camera_y, 4096 - DISPLAY_HEIGHT), 0)
+            npc_target_x = screen_center[0] - (npcs[chosen_npc].width // 2) + camera_x
+            npc_target_y = screen_center[1] - (npcs[chosen_npc].height // 2) + camera_y
+            npc_x = npcs[chosen_npc].x
+            npc_y = npcs[chosen_npc].y
+            if get_distance((npc_x, npc_y), (npc_target_x, npc_target_y)) <= 10:
+                npcs[chosen_npc].x = npc_target_x
+                npcs[chosen_npc].y = npc_target_y
+                npc_x = npcs[chosen_npc].x
+                npc_y = npcs[chosen_npc].y
+                fade_alpha = 255
+            if npc_x != npc_target_x or npc_y != npc_target_y:
+                distance_vector = (npc_target_x - npc_x, npc_target_y - npc_y)
+                move_speed = 3
+                npcs[chosen_npc].vx, npcs[chosen_npc].vy = scale_vector(distance_vector, move_speed)
+                npcs[chosen_npc].update(dt)
+                fade_alpha += fade_alpha_inc_rate
+            else:
+                if len(end_message_buffer) != 0 or end_message != "":
+                    if end_message == "":
+                        end_message = end_message_buffer[0]
+                        end_message_buffer = end_message_buffer[1:]
+                        end_message_display.append("")
+                    dialog_timer += dt
+                    if dialog_timer >= dialog_char_rate:
+                        dialog_timer -= dialog_char_rate
+                        end_message_display[len(end_message_display) - 1] += end_message[0]
+                        end_message = end_message[1:]
 
         # Render
         clear_display()
 
-        display.blit(get_image("background_scaled", False), (0 - camera_x, 0 - camera_y))
-        display.blit(pygame.transform.flip(player_animation[player_animation_index].get_image(), most_recent_dx < 0 and player_animation_index == 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
-        for i in range(0, len(npcs)):
-            flip_x = False
-            flip_y = False
-            if len(npc_behaviors[i]) != 2:
-                if npc_behaviors[i][0]:
-                    flip_x = npcs[i].vx < 0
+        if chosen_npc == -1:
+            display.blit(get_image("background_scaled", False), (0 - camera_x, 0 - camera_y))
+            display.blit(pygame.transform.flip(player_animation[player_animation_index].get_image(), most_recent_dx < 0 and player_animation_index == 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
+            for i in range(0, len(npcs)):
+                flip_x = False
+                flip_y = False
+                if len(npc_behaviors[i]) != 2:
+                    if npc_behaviors[i][0]:
+                        flip_x = npcs[i].vx < 0
+                    else:
+                        flip_y = npcs[i].vy < 0
                 else:
-                    flip_y = npcs[i].vy < 0
-            else:
-                flip_x, flip_y = npc_behaviors[i]
-            display.blit(pygame.transform.flip(npc_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
+                    flip_x, flip_y = npc_behaviors[i]
+                display.blit(pygame.transform.flip(npc_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
 
-        if disp_dialog:
-            pygame.draw.rect(display, BLUE, (int(1280 * 0.1), 0, int(1280 * 0.8), 120))
-            text_one = font_dialog.render(display_dialog_one, False, WHITE)
-            text_two = font_dialog.render(display_dialog_two, False, WHITE)
-            display.blit(text_one, (int(1280 * 0.1) + 22, 17))
-            display.blit(text_two, (int(1280 * 0.1) + 22, 57))
+            if disp_dialog:
+                pygame.draw.rect(display, BLUE, (int(1280 * 0.1), 0, int(1280 * 0.8), 120))
+                text_one = font_dialog.render(display_dialog_one, False, WHITE)
+                text_two = font_dialog.render(display_dialog_two, False, WHITE)
+                display.blit(text_one, (int(1280 * 0.1) + 22, 17))
+                display.blit(text_two, (int(1280 * 0.1) + 22, 57))
 
-            if dialog_one == "" and dialog_two == ""and len(dialog_buffer) == 0:
-                if kill_prompt:
-                    kill_prompt_questions = ["Yes", "No"]
-                    for i in range(0, len(kill_prompt_questions)):
-                        pygame.draw.rect(display, RED, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
-                        text = font_dialog.render(kill_prompt_questions[i], False, WHITE)
-                        display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
-                else:
-                    pygame.draw.rect(display, RED, (int(1280 * 0.65), DISPLAY_HEIGHT - 250 - 70, int(1280 * 0.25), 60))
-                    text = font_dialog.render("Press X to Kill", False, WHITE)
-                    display.blit(text, (int(1280 * 0.65) + 17, DISPLAY_HEIGHT - 250 - 70 + 10))
-                    for i in range(0, len(dialog_questions)):
-                        pygame.draw.rect(display, BLUE, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
-                        text = font_dialog.render(dialog_questions[i], False, WHITE)
-                        display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
+                if dialog_one == "" and dialog_two == ""and len(dialog_buffer) == 0:
+                    if kill_prompt:
+                        kill_prompt_questions = ["Yes", "No"]
+                        for i in range(0, len(kill_prompt_questions)):
+                            pygame.draw.rect(display, RED, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
+                            text = font_dialog.render(kill_prompt_questions[i], False, WHITE)
+                            display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
+                    else:
+                        pygame.draw.rect(display, RED, (int(1280 * 0.65), DISPLAY_HEIGHT - 250 - 70, int(1280 * 0.25), 60))
+                        text = font_dialog.render("Press X to Kill", False, WHITE)
+                        display.blit(text, (int(1280 * 0.65) + 17, DISPLAY_HEIGHT - 250 - 70 + 10))
+                        for i in range(0, len(dialog_questions)):
+                            pygame.draw.rect(display, BLUE, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
+                            text = font_dialog.render(dialog_questions[i], False, WHITE)
+                            display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
+        else:
+            if fade_alpha < 255:
+                display.blit(end_screen_surface, (0, 0))
+                fade_surface = pygame.Surface((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.SRCALPHA)
+                fade_surface.fill((0, 0, 0, fade_alpha))
+                display.blit(fade_surface, (0, 0))
+            display.blit(npc_animations[chosen_npc].get_image(), (npcs[chosen_npc].get_x() - camera_x, npcs[chosen_npc].get_y() - camera_y))
+            for i in range(0, len(end_message_display)):
+                text = font_dialog.render(end_message_display[i], False, WHITE)
+                display.blit(text, (screen_center[0] - (text.get_width() // 2), 60 + (40 * i)))
+            if len(end_message_buffer) == 0 and end_message == "":
+                text = font_dialog.render("Exit", False, WHITE)
+                rect = (screen_center[0] - (text.get_width() // 2) - 10, int(DISPLAY_HEIGHT * 0.75) - 5, text.get_width() + 20, text.get_height() + 10)
+                display.blit(text, (screen_center[0] - (text.get_width() // 2), int(DISPLAY_HEIGHT * 0.75)))
+                pygame.draw.rect(display, WHITE, rect, not point_in_rect((mouse_x, mouse_y), rect))
 
         if show_fps:
             render_fps()
