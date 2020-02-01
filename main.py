@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+import math
 
 # Handle cli flags
 windowed = "--windowed" in sys.argv
@@ -60,7 +61,7 @@ clock = pygame.time.Clock()
 
 # Input variables
 input_queue = []
-input_states = {}
+input_states = {"player up":False, "player right":False, "player down":False, "player left":False}
 mouse_x = 0
 mouse_y = 0
 
@@ -134,20 +135,195 @@ EXIT = -1
 MAIN_LOOP = 0
 
 
+def get_distance(point1, point2):
+    return math.sqrt(((point2[0] - point1[0]) ** 2) + ((point2[1] - point1[1]) ** 2))
+
+
+def sum_vectors(a, b):
+    return (a[0] + b[0], a[1] + b[1])
+
+
+def scale_vector(old_vector, new_magnitude):
+    old_magnitude = math.sqrt((old_vector[0] ** 2) + (old_vector[1] ** 2))
+    if old_magnitude == 0:
+        return (0, 0)
+    scale = new_magnitude / old_magnitude
+    new_x = old_vector[0] * scale
+    new_y = old_vector[1] * scale
+    return (new_x, new_y)
+
+
+def get_center(rect):
+    return ((rect[0] + (rect[2] // 2)), (rect[1] + (rect[3] // 2)))
+
+
+def rects_collide(rect1, rect2):
+    r1_center_x, r1_center_y = get_center(rect1)
+    r2_center_x, r2_center_y = get_center(rect2)
+    return abs(r1_center_x - r2_center_x) * 2 < rect1[2] + rect2[2] and abs(r1_center_y - r2_center_y) * 2 < rect1[3] + rect2[3]
+
+
+def point_in_rect(point, rect):
+    return rects_collide((point[0], point[1], 1, 1), rect)
+
+
+def get_point_angle(point1, point2):
+    xdiff = point2[0] - point1[0]
+    ydiff = point2[1] - point1[1]
+    angle = math.degrees(math.atan2(ydiff, xdiff))
+    if angle > 0:
+        angle = 360 - angle
+    elif angle < 0:
+        angle *= -1
+
+    return angle
+
+
+class Entity():
+    def __init__(self, image, has_alpha):
+        image_object = get_image(image, has_alpha)
+
+        self.image = image
+        self.image_append = ""
+        self.has_alpha = has_alpha
+        self.rotation = None
+        self.offset_x = 0
+        self.offset_y = 0
+        self.x = 0
+        self.y = 0
+        self.width = image_object.get_rect().width
+        self.height = image_object.get_rect().height
+        self.vx = 0
+        self.vy = 0
+
+    def update(self, dt):
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+
+    def get_x(self):
+        return int(round(self.x)) + self.offset_x
+
+    def get_y(self):
+        return int(round(self.y)) + self.offset_y
+
+    def update_rect(self):
+        image_obj = get_image(self.image, self.has_alpha)
+        self.width, self.height = image_obj.get_rect().width, image_obj.get_rect().height
+
+    def get_rect(self):
+        return (self.x, self.y, self.width, self.height)
+
+    def get_center(self):
+        return (self.x + self.width // 2, self.y + self.height // 2)
+
+    def collides(self, other):
+        return rects_collide(self.get_rect(), other)
+
+    def check_collision(self, dt, collider):
+        """
+        This checks for a collision with a wall-like object and handles it if necessary
+        """
+        collides = False
+
+        if self.collides(collider):
+            collides = True
+
+            x_step = self.vx * dt
+            y_step = self.vy * dt
+
+            # Since there was a collision, rollback our previous movement
+            self.x -= x_step
+            self.y -= y_step
+
+            # Check to see if that collision happened due to x movement
+            self.x += x_step
+            x_caused_collision = self.collides(collider)
+            self.x -= x_step
+
+            # Check to see if that collision happened due to y movement
+            self.y += y_step
+            y_caused_collision = self.collides(collider)
+            self.y -= y_step
+
+            # If x/y didn't cause collision, we can move in x/y direction
+            if not x_caused_collision:
+                self.x += x_step
+            if not y_caused_collision:
+                self.y += y_step
+
+        # This is for if we want to override the function and add extra behavior to the collision
+        return collides
+
+    def get_image(self, alpha=255):
+        image = None
+        if alpha == 255:
+            image = get_image(self.image + self.image_append, self.has_alpha)
+        else:
+            image = get_image(self.image + self.image_append, self.has_alpha, alpha)
+        if self.rotation is None:
+            return image
+        else:
+            image, offset = rotate_image(image, self.rotation)
+            self.offset_x, self.offset_y = offset
+            return image
+
+
 def game():
     running = True
+
+    player = Entity("player", True)
+    player.x, player.y = (492, 1818)
+    player_dx, player_dy = (0, 0)
+    player_speed = 3
+
+    camera_x, camera_y = (0, 0)
+    camera_offset_x, camera_offset_y = (player.width // 2) - (DISPLAY_WIDTH // 2), (player.height // 2) - (DISPLAY_HEIGHT // 2)
+
     while running:
         # Handle input
         handle_input()
         while len(input_queue) != 0:
             event = input_queue.pop()
+            if event == ("player up", True):
+                player_dy = -1
+            elif event == ("player right", True):
+                player_dx = 1
+            elif event == ("player down", True):
+                player_dy = 1
+            elif event == ("player left", True):
+                player_dx = -1
+            elif event == ("player up", False):
+                if input_states["player down"]:
+                    player_dy = 1
+                else:
+                    player_dy = 0
+            elif event == ("player right", False):
+                if input_states["player left"]:
+                    player_dx = -1
+                else:
+                    player_dx = 0
+            elif event == ("player down", False):
+                if input_states["player up"]:
+                    player_dy = -1
+                else:
+                    player_dy = 0
+            elif event == ("player left", False):
+                if input_states["player right"]:
+                    player_dx = 1
+                else:
+                    player_dx = 0
 
         # Update
+        player.vx, player.vy = scale_vector((player_dx, player_dy), player_speed)
+        player.update(dt)
+
+        camera_x, camera_y = player.get_x() + camera_offset_x, player.get_y() + camera_offset_y
 
         # Render
         clear_display()
 
-        display.blit(get_image("dirty-uncle", True), ((DISPLAY_WIDTH // 2) - 40, (DISPLAY_HEIGHT / 2) - 100))
+        display.blit(get_image("b_background", True), (0 - camera_x, 0 - camera_y))
+        display.blit(player.get_image(), (player.get_x() - camera_x, player.get_y() - camera_y))
 
         if show_fps:
             render_fps()
@@ -160,6 +336,38 @@ def handle_input():
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             pygame.quit()
             sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_w:
+                input_queue.append(("player up", True))
+                input_states["player up"] = True
+            elif event.key == pygame.K_d:
+                input_queue.append(("player right", True))
+                input_states["player right"] = True
+            elif event.key == pygame.K_s:
+                input_queue.append(("player down", True))
+                input_states["player down"] = True
+            elif event.key == pygame.K_a:
+                input_queue.append(("player left", True))
+                input_states["player left"] = True
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_w:
+                input_queue.append(("player up", False))
+                input_states["player up"] = False
+            elif event.key == pygame.K_d:
+                input_queue.append(("player right", False))
+                input_states["player right"] = False
+            elif event.key == pygame.K_s:
+                input_queue.append(("player down", False))
+                input_states["player down"] = False
+            elif event.key == pygame.K_a:
+                input_queue.append(("player left", False))
+                input_states["player left"] = False
+        elif event.type == pygame.MOUSEMOTION:
+            mouse_pos = pygame.mouse.get_pos()
+            mouse_x = int(mouse_pos[0] / SCALE)
+            mouse_y = int(mouse_pos[1] / SCALE)
+
+
     """
     elif event.type == pygame.KEYDOWN:
     if event.key == pygame.K_w etc etc
@@ -184,7 +392,7 @@ def flip_display():
 
 
 def render_fps():
-    text = font_small.render("FPS: " + str(fps), False, YELLOW)
+    text = font_small.render("FPS: " + str(fps), False, BLACK)
     display.blit(text, (0, 0))
 
 
