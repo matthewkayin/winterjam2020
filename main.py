@@ -320,6 +320,7 @@ def game():
     dialog_char_rate = 4
 
     dialog_questions = ["What is your name?", "Do you know who the heck has the corona virus?", "You wanna buy some deathsticks?"]
+    kill_prompt = False
 
     npc = Entity((100, 160))
     npc_animation = Animation("bunny", (100, 160), 3, 16)
@@ -373,27 +374,54 @@ def game():
                     player_dx = 1
                 else:
                     player_dx = 0
+            elif event == ("kill", True):
+                if not kill_prompt and disp_dialog and dialog_one == "" and dialog_two == "" and len(dialog_buffer) == 0:
+                    kill_prompt = True
+                    dialog_buffer = split_dialog("Are you sure you want to kill <Actually put NPC name here>?")
+                    display_dialog_one = ""
+                    display_dialog_two = ""
+                    dialog_one = dialog_buffer[0]
+                    if len(dialog_buffer) > 1:
+                        dialog_two = dialog_buffer[1]
+                        dialog_buffer = dialog_buffer[2:]
+                    else:
+                        dialog_two = ""
+                        dialog_buffer = []
             elif event == ("left click", True):
                 if disp_dialog:
                     if dialog_one == "" and dialog_two == "":
                         if len(dialog_buffer) == 0:
-                            clicked_dialog = False
-                            for i in range(0, len(dialog_questions)):
-                                if point_in_rect((mouse_x, mouse_y), (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60)):
-                                    dialog_buffer = split_dialog(npc_dialog[i + 1])
-                                    display_dialog_one = ""
-                                    display_dialog_two = ""
-                                    dialog_one = dialog_buffer[0]
-                                    if len(dialog_buffer) > 1:
-                                        dialog_two = dialog_buffer[1]
-                                        dialog_buffer = dialog_buffer[2:]
-                                    else:
-                                        dialog_two = ""
-                                        dialog_buffer = []
-                                    clicked_dialog = True
-                                    break
-                            if not clicked_dialog:
-                                disp_dialog = False
+                            if kill_prompt:
+                                for i in range(0, 2):
+                                    if point_in_rect((mouse_x, mouse_y), (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60)):
+                                        if i == 0:
+                                            print("kill action")
+                                        else:
+                                            kill_prompt = False
+                                            disp_dialog = False
+                                            display_dialog_one = ""
+                                            display_dialog_two = ""
+                                            dialog_one = ""
+                                            dialog_two = ""
+                                            dialog_buffer = []
+                            else:
+                                clicked_dialog = False
+                                for i in range(0, len(dialog_questions)):
+                                    if point_in_rect((mouse_x, mouse_y), (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60)):
+                                        dialog_buffer = split_dialog(npc_dialog[i + 1])
+                                        display_dialog_one = ""
+                                        display_dialog_two = ""
+                                        dialog_one = dialog_buffer[0]
+                                        if len(dialog_buffer) > 1:
+                                            dialog_two = dialog_buffer[1]
+                                            dialog_buffer = dialog_buffer[2:]
+                                        else:
+                                            dialog_two = ""
+                                            dialog_buffer = []
+                                        clicked_dialog = True
+                                        break
+                                if not clicked_dialog:
+                                    disp_dialog = False
                         else:
                             dialog_one = dialog_buffer[0]
                             if len(dialog_buffer) > 1:
@@ -499,10 +527,20 @@ def game():
             display.blit(text_two, (int(1280 * 0.1) + 22, 57))
 
             if dialog_one == "" and dialog_two == ""and len(dialog_buffer) == 0:
-                for i in range(0, len(dialog_questions)):
-                    pygame.draw.rect(display, BLUE, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
-                    text = font_dialog.render(dialog_questions[i], False, WHITE)
-                    display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
+                if kill_prompt:
+                    kill_prompt_questions = ["Yes", "No"]
+                    for i in range(0, len(kill_prompt_questions)):
+                        pygame.draw.rect(display, RED, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
+                        text = font_dialog.render(kill_prompt_questions[i], False, WHITE)
+                        display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
+                else:
+                    pygame.draw.rect(display, RED, (int(1280 * 0.65), DISPLAY_HEIGHT - 250 - 70, int(1280 * 0.25), 60))
+                    text = font_dialog.render("Press X to Kill", False, WHITE)
+                    display.blit(text, (int(1280 * 0.65) + 17, DISPLAY_HEIGHT - 250 - 70 + 10))
+                    for i in range(0, len(dialog_questions)):
+                        pygame.draw.rect(display, BLUE, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
+                        text = font_dialog.render(dialog_questions[i], False, WHITE)
+                        display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
 
         if show_fps:
             render_fps()
@@ -530,6 +568,9 @@ def handle_input():
             elif event.key == pygame.K_a:
                 input_queue.append(("player left", True))
                 input_states["player left"] = True
+            elif event.key == pygame.K_x:
+                input_queue.append(("kill", True))
+                input_states["kill"] = True
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_w:
                 input_queue.append(("player up", False))
@@ -543,6 +584,9 @@ def handle_input():
             elif event.key == pygame.K_a:
                 input_queue.append(("player left", False))
                 input_states["player left"] = False
+            elif event.key == pygame.K_x:
+                input_queue.append(("kill", False))
+                input_states["kill"] = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == pygame.BUTTON_LEFT:
                 input_queue.append(("left click", True))
