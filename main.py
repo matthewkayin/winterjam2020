@@ -271,13 +271,15 @@ class Entity():
 def game():
     running = True
 
-    player = Entity("mouse", True)
+    player = Entity("mouse1", True)
     player.x, player.y = (492, 1818)
     player_dx, player_dy = (0, 0)
     player_speed = 3
 
     camera_x, camera_y = (0, 0)
-    camera_offset_x, camera_offset_y = (player.width // 2) - (DISPLAY_WIDTH // 2), (player.height // 2) - (DISPLAY_HEIGHT // 2)
+    screen_center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2)
+    camera_offset_x, camera_offset_y = (player.width // 2) - screen_center[0], (player.height // 2) - screen_center[1]
+    mouse_sensitivity = 0.1
 
     while running:
         # Handle input
@@ -317,7 +319,7 @@ def game():
         player.vx, player.vy = scale_vector((player_dx, player_dy), player_speed)
         player.update(dt)
 
-        camera_x, camera_y = player.get_x() + camera_offset_x, player.get_y() + camera_offset_y
+        camera_x, camera_y = player.get_x() + camera_offset_x + int((mouse_x - screen_center[0]) * mouse_sensitivity), player.get_y() + camera_offset_y + int((mouse_y - screen_center[1]) * mouse_sensitivity)
 
         # Render
         clear_display()
@@ -332,6 +334,8 @@ def game():
 
 
 def handle_input():
+    global mouse_x, mouse_y
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             pygame.quit()
