@@ -292,7 +292,7 @@ def game():
     player.x, player.y = (492, 1818)
     player_dx, player_dy = (0, 0)
     player_speed = 3
-    player_animation = [Animation("mouse-walk", (120, 160), 6, 4), Animation("mouse-front", (120, 160), 3, 8)]
+    player_animation = [Animation("mouse-walk", (120, 160), 6, 4), Animation("mouse-front", (120, 160), 3, 8), Animation("mouse-back", (120, 160), 3, 8)]
     player_animation_index = 0
 
     disp_dialog = False
@@ -370,12 +370,23 @@ def game():
             for animation in player_animation:
                 animation.reset()
         else:
-            if player_animation_index == 0 and player_dx == 0 and player_dy == 1:
-                player_animation_index = 1
+            if player_animation_index == 0 and player_dx == 0:
+                if player_dy == 1:
+                    player_animation_index = 1
+                elif player_dy == -1:
+                    player_animation_index = 2
                 player_animation[player_animation_index].reset()
-            elif player_animation_index == 1 and player_dx != 0:
+            elif (player_animation_index == 1 or player_animation_index == 2) and player_dx != 0:
                 player_animation_index = 0
                 player_animation[player_animation_index].reset()
+            elif player_animation_index == 1 and player_dx == 0:
+                if player_dy == -1:
+                    player_animation_index = 2
+                    player_animation[player_animation_index].reset()
+            elif player_animation_index == 2 and player_dx == 0:
+                if player_dy == 1:
+                    player_animation_index = 1
+                    player_animation[player_animation_index].reset()
             player_animation[player_animation_index].update(dt)
 
         # update camera
