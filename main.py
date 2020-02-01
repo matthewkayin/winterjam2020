@@ -166,8 +166,23 @@ class Animation():
 
 # Fonts
 font_small = pygame.font.SysFont("Serif", 11)
-font_dialog = pygame.font.Font("res/ttf/raleway.ttf", 32)
+font_dialog = pygame.font.Font("res/ttf/oxygen.ttf", 32)
 
+
+def split_dialog(dialog):
+    result_dialog = []
+    while len(dialog) > 52:
+        split_point = 52
+        if dialog[split_point - 1] != ' ' and dialog[split_point] != ' ':
+            split_point = dialog[:split_point].rfind(' ') + 1
+        result_dialog.append(dialog[:split_point])
+        dialog = dialog[split_point:]
+        if dialog[0] == ' ':
+            dialog = dialog[1:]
+    if dialog != "":
+        result_dialog.append(dialog)
+
+    return result_dialog
 
 # game states
 EXIT = -1
@@ -296,13 +311,16 @@ def game():
     player_animation_index = 0
 
     disp_dialog = False
-    dialog = ""
-    display_dialog = ""
+    dialog_buffer = []
+    display_dialog_one = ""
+    display_dialog_two = ""
+    dialog_one = ""
+    dialog_two = ""
     dialog_timer = 0
     dialog_char_rate = 4
 
-    npc = Entity((120, 160))
-    npc_animation = Animation("mouse-walk", (120, 160), 6, 4)
+    npc = Entity((100, 160))
+    npc_animation = Animation("bunny", (100, 160), 3, 16)
     npc.x, npc.y = (492, 1600)
 
     camera_x, camera_y = (0, 0)
@@ -345,22 +363,55 @@ def game():
                     player_dx = 0
             elif event == ("left click", True):
                 if disp_dialog:
-                    disp_dialog = False
+                    if dialog_one == "" and dialog_two == "":
+                        if len(dialog_buffer) == 0:
+                            disp_dialog = False
+                        else:
+                            dialog_one = dialog_buffer[0]
+                            if len(dialog_buffer) > 1:
+                                dialog_two = dialog_buffer[1]
+                                dialog_buffer = dialog_buffer[2:]
+                            else:
+                                dialog_two = ""
+                                dialog_buffer = []
+                            display_dialog_one = ""
+                            display_dialog_two = ""
+                    else:
+                        display_dialog_one += dialog_one
+                        display_dialog_two += dialog_two
+                        dialog_one = ""
+                        dialog_two = ""
                 else:
                     if point_in_rect((mouse_x + camera_x, mouse_y + camera_y), npc.get_rect()):
-                        dialog = "Hello frens I am a lil mouse what is your name?"
+                        dialog = "Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding."
+                        dialog_buffer = split_dialog(dialog)
+                        display_dialog_one = ""
+                        display_dialog_two = ""
+                        dialog_one = dialog_buffer[0]
+                        if len(dialog_buffer) > 1:
+                            dialog_two = dialog_buffer[1]
+                            dialog_buffer = dialog_buffer[2:]
+                        else:
+                            dialog_two = ""
+                            dialog_buffer = []
                         disp_dialog = True
 
         # Update
         if disp_dialog:
             player.dx, player.dy = (0, 0)
 
-            if dialog != "":
+            if dialog_one != "":
                 dialog_timer += dt
                 if dialog_timer >= dialog_char_rate:
                     dialog_timer -= dialog_char_rate
-                    display_dialog += dialog[0]
-                    dialog = dialog[1:]
+                    display_dialog_one += dialog_one[0]
+                    dialog_one = dialog_one[1:]
+            elif dialog_two != "":
+                dialog_timer += dt
+                if dialog_timer >= dialog_char_rate:
+                    dialog_timer -= dialog_char_rate
+                    display_dialog_two += dialog_two[0]
+                    dialog_two = dialog_two[1:]
 
         # update player
         player.vx, player.vy = scale_vector((player_dx, player_dy), player_speed)
@@ -389,6 +440,8 @@ def game():
                     player_animation[player_animation_index].reset()
             player_animation[player_animation_index].update(dt)
 
+        npc_animation.update(dt)
+
         # update camera
         if not disp_dialog:
             camera_x, camera_y = player.get_x() + camera_offset_x + int((mouse_x - screen_center[0]) * mouse_sensitivity), player.get_y() + camera_offset_y + int((mouse_y - screen_center[1]) * mouse_sensitivity)
@@ -403,8 +456,10 @@ def game():
 
         if disp_dialog:
             pygame.draw.rect(display, BLUE, (int(1280 * 0.1), 0, int(1280 * 0.8), 120))
-            text = font_dialog.render(display_dialog, False, WHITE)
-            display.blit(text, (int(1280 * 0.1) + 22, 12))
+            text_one = font_dialog.render(display_dialog_one, False, WHITE)
+            text_two = font_dialog.render(display_dialog_two, False, WHITE)
+            display.blit(text_one, (int(1280 * 0.1) + 22, 17))
+            display.blit(text_two, (int(1280 * 0.1) + 22, 57))
 
         if show_fps:
             render_fps()
