@@ -77,8 +77,21 @@ YELLOW = (255, 255, 0)
 
 
 # Images
-image_path = "res/"
+image_path = "res/gfx/"
 image_cache = {}
+
+
+def get_sprite(path, index, size):
+    base_sheet = get_image(path, True)
+    coords = (0, 0)
+    while index != 0:
+        coords = (coords[0] + size[0], coords[1])
+        if coords[0] >= base_sheet.get_width():
+            coords = (0, coords[1] + size[1])
+            if size[1] >= base_sheet.get_height():
+                print("Spritesheet index out of range! " + path + ", " + str(index))
+        index -= 1
+    return base_sheet.subsurface(coords[0], coords[1], size[0], size[1])
 
 
 def get_image(path, has_alpha, alpha=255, subrect=None):
@@ -126,8 +139,34 @@ def rotate_image(image, angle, origin_pos=None):
     return rotated_image, offset
 
 
+class Animation():
+    def __init__(self, spritesheet, size, frames, frame_duration):
+        self.spritesheet = spritesheet
+        self.size = size
+        self.frames = frames
+        self.frame_duration = frame_duration
+        self.index = 0
+        self.timer = 0
+
+    def reset(self):
+        self.index = 0
+        self.timer = 0
+
+    def update(self, dt):
+        self.timer += dt
+        if self.timer >= self.frame_duration:
+            self.timer -= self.frame_duration
+            self.index += 1
+            if self.index >= self.frames:
+                self.index = 0
+
+    def get_image(self):
+        return get_sprite(self.spritesheet, self.index, self.size)
+
+
 # Fonts
 font_small = pygame.font.SysFont("Serif", 11)
+font_dialog = pygame.font.Font("res/ttf/raleway.ttf", 22)
 
 
 # game states
@@ -180,19 +219,14 @@ def get_point_angle(point1, point2):
 
 
 class Entity():
-    def __init__(self, image, has_alpha):
-        image_object = get_image(image, has_alpha)
+    def __init__(self, size):
 
-        self.image = image
-        self.image_append = ""
-        self.has_alpha = has_alpha
         self.rotation = None
         self.offset_x = 0
         self.offset_y = 0
         self.x = 0
         self.y = 0
-        self.width = image_object.get_rect().width
-        self.height = image_object.get_rect().height
+        self.width, self.height = size
         self.vx = 0
         self.vy = 0
 
@@ -205,10 +239,6 @@ class Entity():
 
     def get_y(self):
         return int(round(self.y)) + self.offset_y
-
-    def update_rect(self):
-        image_obj = get_image(self.image, self.has_alpha)
-        self.width, self.height = image_obj.get_rect().width, image_obj.get_rect().height
 
     def get_rect(self):
         return (self.x, self.y, self.width, self.height)
@@ -254,27 +284,21 @@ class Entity():
         # This is for if we want to override the function and add extra behavior to the collision
         return collides
 
-    def get_image(self, alpha=255):
-        image = None
-        if alpha == 255:
-            image = get_image(self.image + self.image_append, self.has_alpha)
-        else:
-            image = get_image(self.image + self.image_append, self.has_alpha, alpha)
-        if self.rotation is None:
-            return image
-        else:
-            image, offset = rotate_image(image, self.rotation)
-            self.offset_x, self.offset_y = offset
-            return image
-
 
 def game():
     running = True
 
-    player = Entity("mouse1", True)
+    player = Entity((160, 160))
     player.x, player.y = (492, 1818)
     player_dx, player_dy = (0, 0)
     player_speed = 3
+    player_animation = Animation("mouse-walk", (160, 160), 6, 4)
+
+    dialog = ""
+
+    npc = Entity((160, 160))
+    npc_animation = Animation("mouse-walk", (160, 160), 6, 4)
+    npc.x, npc.y = (492, 1600)
 
     camera_x, camera_y = (0, 0)
     screen_center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2)
@@ -314,18 +338,39 @@ def game():
                     player_dx = 1
                 else:
                     player_dx = 0
+            elif event == ("left click", True):
+                if dialog != "":
+                    dialog = ""
+                else:
+                    if point_in_rect((mouse_x + camera_x, mouse_y + camera_y), npc.get_rect()):
+                        dialog = "Hello frens I am a lil mouse what is your name?"
 
         # Update
+        if dialog != "":
+            player.dx, player.dy = (0, 0)
+
+        # update player
         player.vx, player.vy = scale_vector((player_dx, player_dy), player_speed)
         player.update(dt)
+        player.check_collision(dt, npc.get_rect())
+        if (player.vx, player.vy) == (0, 0):
+            player_animation.reset()
+        else:
+            player_animation.update(dt)
 
+        # update camera
         camera_x, camera_y = player.get_x() + camera_offset_x + int((mouse_x - screen_center[0]) * mouse_sensitivity), player.get_y() + camera_offset_y + int((mouse_y - screen_center[1]) * mouse_sensitivity)
+        camera_x, camera_y = max(min(camera_x, 4096 - DISPLAY_WIDTH), 0), max(min(camera_y, 4096 - DISPLAY_HEIGHT), 0)
 
         # Render
         clear_display()
 
         display.blit(get_image("b_background", True), (0 - camera_x, 0 - camera_y))
-        display.blit(player.get_image(), (player.get_x() - camera_x, player.get_y() - camera_y))
+        display.blit(pygame.transform.flip(player_animation.get_image(), player.vx < 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
+        display.blit(pygame.transform.flip(npc_animation.get_image(), False, False), (npc.get_x() - camera_x, npc.get_y() - camera_y))
+
+        if dialog != "":
+            pygame.draw.rect(display, BLUE, (int(1280 * 0.2), 0, int(1280 * 0.8), 60))
 
         if show_fps:
             render_fps()
@@ -370,17 +415,6 @@ def handle_input():
             mouse_pos = pygame.mouse.get_pos()
             mouse_x = int(mouse_pos[0] / SCALE)
             mouse_y = int(mouse_pos[1] / SCALE)
-
-
-    """
-    elif event.type == pygame.KEYDOWN:
-    if event.key == pygame.K_w etc etc
-    elif event.type == pygame.KEYUP:
-    elif event.type == pygame.MOUSEMOTION:
-    mouse_pos = pygame.mouse.get_pos()
-    mouse_x = int(mouse_pos[0] / SCALE)
-    mouse_y = int(mouse_pos[1] / SCALE)
-    """
 
 
 def clear_display():
