@@ -288,17 +288,17 @@ class Entity():
 def game():
     running = True
 
-    player = Entity((160, 160))
+    player = Entity((120, 160))
     player.x, player.y = (492, 1818)
     player_dx, player_dy = (0, 0)
     player_speed = 3
-    player_animation = [Animation("mouse-walk", (160, 160), 6, 4), Animation("mouse-front", (160, 160), 3, 8)]
+    player_animation = [Animation("mouse-walk", (120, 160), 5, 4), Animation("mouse-front", (160, 160), 3, 8)]
     player_animation_index = 0
 
     dialog = ""
 
-    npc = Entity((160, 160))
-    npc_animation = Animation("mouse-walk", (160, 160), 6, 4)
+    npc = Entity((120, 160))
+    npc_animation = Animation("mouse-walk", (120, 160), 6, 4)
     npc.x, npc.y = (492, 1600)
 
     camera_x, camera_y = (0, 0)
