@@ -12,10 +12,10 @@ if "--debug" in sys.argv:
 
 
 # Resolution variables, Display is streched to match Screen which can be set by user
-DISPLAY_WIDTH = 640
-DISPLAY_HEIGHT = 360
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 360
+DISPLAY_WIDTH = 1280
+DISPLAY_HEIGHT = 720
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
 
 if os.path.isfile("data/settings.txt"):
     print("Settings file found!")
@@ -26,11 +26,11 @@ if os.path.isfile("data/settings.txt"):
             SCREEN_HEIGHT = int(line[line.index("x") + 1:])
             aspect_ratio = SCREEN_WIDTH / SCREEN_HEIGHT
             if aspect_ratio == 4 / 3:
-                DISPLAY_HEIGHT = 480
+                DISPLAY_HEIGHT = 960
             elif aspect_ratio == 16 / 10:
-                DISPLAY_HEIGHT = 420
+                DISPLAY_HEIGHT = 840
             elif aspect_ratio == 16 / 9:
-                DISPLAY_HEIGHT = 360
+                DISPLAY_HEIGHT = 720
 else:
     print("No settings file found!")
 print("Resolution set to " + str(SCREEN_WIDTH) + "x" + str(SCREEN_HEIGHT) + ".")
@@ -61,7 +61,7 @@ clock = pygame.time.Clock()
 
 # Input variables
 input_queue = []
-input_states = {"player up":False, "player right":False, "player down":False, "player left":False}
+input_states = {"player up": False, "player right": False, "player down": False, "player left": False}
 mouse_x = 0
 mouse_y = 0
 
