@@ -61,7 +61,7 @@ clock = pygame.time.Clock()
 
 # Input variables
 input_queue = []
-input_states = {"player up": False, "player right": False, "player down": False, "player left": False}
+input_states = {"player up": False, "player right": False, "player down": False, "player left": False, "left click": False}
 mouse_x = 0
 mouse_y = 0
 
@@ -166,7 +166,7 @@ class Animation():
 
 # Fonts
 font_small = pygame.font.SysFont("Serif", 11)
-font_dialog = pygame.font.Font("res/ttf/raleway.ttf", 22)
+font_dialog = pygame.font.Font("res/ttf/raleway.ttf", 32)
 
 
 # game states
@@ -292,10 +292,14 @@ def game():
     player.x, player.y = (492, 1818)
     player_dx, player_dy = (0, 0)
     player_speed = 3
-    player_animation = [Animation("mouse-walk", (120, 160), 5, 4), Animation("mouse-front", (160, 160), 3, 8)]
+    player_animation = [Animation("mouse-walk", (120, 160), 6, 4), Animation("mouse-front", (120, 160), 3, 8)]
     player_animation_index = 0
 
+    disp_dialog = False
     dialog = ""
+    display_dialog = ""
+    dialog_timer = 0
+    dialog_char_rate = 4
 
     npc = Entity((120, 160))
     npc_animation = Animation("mouse-walk", (120, 160), 6, 4)
@@ -340,15 +344,23 @@ def game():
                 else:
                     player_dx = 0
             elif event == ("left click", True):
-                if dialog != "":
-                    dialog = ""
+                if disp_dialog:
+                    disp_dialog = False
                 else:
                     if point_in_rect((mouse_x + camera_x, mouse_y + camera_y), npc.get_rect()):
                         dialog = "Hello frens I am a lil mouse what is your name?"
+                        disp_dialog = True
 
         # Update
-        if dialog != "":
+        if disp_dialog:
             player.dx, player.dy = (0, 0)
+
+            if dialog != "":
+                dialog_timer += dt
+                if dialog_timer >= dialog_char_rate:
+                    dialog_timer -= dialog_char_rate
+                    display_dialog += dialog[0]
+                    dialog = dialog[1:]
 
         # update player
         player.vx, player.vy = scale_vector((player_dx, player_dy), player_speed)
@@ -367,8 +379,9 @@ def game():
             player_animation[player_animation_index].update(dt)
 
         # update camera
-        camera_x, camera_y = player.get_x() + camera_offset_x + int((mouse_x - screen_center[0]) * mouse_sensitivity), player.get_y() + camera_offset_y + int((mouse_y - screen_center[1]) * mouse_sensitivity)
-        camera_x, camera_y = max(min(camera_x, 4096 - DISPLAY_WIDTH), 0), max(min(camera_y, 4096 - DISPLAY_HEIGHT), 0)
+        if not disp_dialog:
+            camera_x, camera_y = player.get_x() + camera_offset_x + int((mouse_x - screen_center[0]) * mouse_sensitivity), player.get_y() + camera_offset_y + int((mouse_y - screen_center[1]) * mouse_sensitivity)
+            camera_x, camera_y = max(min(camera_x, 4096 - DISPLAY_WIDTH), 0), max(min(camera_y, 4096 - DISPLAY_HEIGHT), 0)
 
         # Render
         clear_display()
@@ -377,8 +390,10 @@ def game():
         display.blit(pygame.transform.flip(player_animation[player_animation_index].get_image(), player.vx < 0 and player_animation_index == 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
         display.blit(pygame.transform.flip(npc_animation.get_image(), False, False), (npc.get_x() - camera_x, npc.get_y() - camera_y))
 
-        if dialog != "":
-            pygame.draw.rect(display, BLUE, (int(1280 * 0.2), 0, int(1280 * 0.8), 60))
+        if disp_dialog:
+            pygame.draw.rect(display, BLUE, (int(1280 * 0.1), 0, int(1280 * 0.8), 120))
+            text = font_dialog.render(display_dialog, False, WHITE)
+            display.blit(text, (int(1280 * 0.1) + 22, 12))
 
         if show_fps:
             render_fps()
@@ -419,6 +434,14 @@ def handle_input():
             elif event.key == pygame.K_a:
                 input_queue.append(("player left", False))
                 input_states["player left"] = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == pygame.BUTTON_LEFT:
+                input_queue.append(("left click", True))
+                input_states["left click"] = True
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == pygame.BUTTON_LEFT:
+                input_queue.append(("left click", False))
+                input_states["left click"] = False
         elif event.type == pygame.MOUSEMOTION:
             mouse_pos = pygame.mouse.get_pos()
             mouse_x = int(mouse_pos[0] / SCALE)
