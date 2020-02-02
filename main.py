@@ -168,6 +168,7 @@ class Animation():
 # Fonts
 font_small = pygame.font.SysFont("Serif", 11)
 font_dialog = pygame.font.Font("res/ttf/oxygen.ttf", 32)
+font_prologue = pygame.font.Font("res/ttf/oxygen.ttf", 26)
 font_title = pygame.font.Font("res/ttf/oxygen.ttf", 72)
 
 
@@ -185,6 +186,7 @@ def split_dialog(dialog):
         result_dialog.append(dialog)
 
     return result_dialog
+
 
 # game states
 EXIT = -1
@@ -307,6 +309,9 @@ def game():
     running = True
     next_state = EXIT
 
+    pygame.mixer.music.load("res/bgm/ingame.mp3")
+    pygame.mixer.music.play(-1)
+
     player = Entity((120, 160))
     player.x, player.y = (968, 3922)
     player_dx, player_dy = (0, 0)
@@ -365,8 +370,8 @@ def game():
     map_colliders = []
     map_colliders.append((0, 0, 612, 4096))
     map_colliders.append((3478, 0, 618, 4096))
-    map_colliders.append((1466, 0, 1154, 898))
-    map_colliders.append((1470, 1478, 1150, 856))
+    map_colliders.append((1466, 0, 1154, 811))
+    map_colliders.append((1470, 1478, 1150, 789))
     map_colliders.append((1476, 3196, 1144, 900))
     map_colliders.append((0, -1, 4096, 1))
     map_colliders.append((0, 4096, 4096, 1))
@@ -679,6 +684,7 @@ def game():
         flip_display()
         tick()
 
+    pygame.mixer.music.stop()
     if next_state == MENU:
         menu()
 
@@ -690,21 +696,94 @@ def menu():
     pygame.mixer.music.load("res/bgm/menu.mp3")
     pygame.mixer.music.play(-1)
 
+    TITLE = 0
+    PROLOGUE = 1
+    menu_state = TITLE
+
     screen_center = (DISPLAY_WIDTH // 2, DISPLAY_HEIGHT // 2)
+
     title_text = font_title.render("Critter Contagion", False, WHITE)
+    play_text = font_dialog.render("Play", False, WHITE)
+    play_rect = (screen_center[0] - (play_text.get_width() // 2) - 10, int(DISPLAY_HEIGHT * 0.55) - 5, play_text.get_width() + 20, play_text.get_height() + 10)
+    exit_text = font_dialog.render("Exit", False, WHITE)
+    exit_rect = (screen_center[0] - (exit_text.get_width() // 2) - 10, int(DISPLAY_HEIGHT * 0.55) - 5 + 80, exit_text.get_width() + 20, exit_text.get_height() + 10)
+
+    dialog_timer = 0
+    dialog_char_rate = 2
+    dialog_display = []
+    current_line = ""
+
+    prologue = []
+    prologue_text = "Panic sweeps the critter population as a deadly virus spreads from rodent to rodent. "
+    prologue_text += "The Axeman Virus has no cure; only death can prevent its further spread among the population. "
+    prologue.append(split_dialog(prologue_text) + [""])
+    prologue_text = "Faced with the end of the world, the Whisker's Health Organization fights a desperate struggle "
+    prologue_text += "against an unstoppable plague and a rising death rate. "
+    prologue_text += "Reports tell of an infected individual who has made their way to the city of Bigtree. "
+    prologue_text += "To prevent further spread of the disease, the WHO has sent you to take this individual out. "
+    prologue.append(split_dialog(prologue_text) + [""])
+    prologue_text = "Here, discretion is key. Individuals aren't likely to be forthcoming about their condition, "
+    prologue_text += "and the visible symptoms of the disease are the same as those of a common cold. But a wrong "
+    prologue_text += "decision would mean the needless death of innocents, and the disease waits for no one."
+    prologue.append(split_dialog(prologue_text) + [""])
+
+    prologue_play_rect = (screen_center[0] - (play_text.get_width() // 2) - 10, int(DISPLAY_HEIGHT * 0.85) - 5, play_text.get_width() + 20, play_text.get_height() + 10)
 
     while running:
         handle_input()
         while len(input_queue) != 0:
             event = input_queue.pop()
             if event == ("left click", True):
-                running = False
-                next_state = MAIN_LOOP
+                if menu_state == TITLE:
+                    if point_in_rect((mouse_x, mouse_y), play_rect):
+                        menu_state = PROLOGUE
+                    elif point_in_rect((mouse_x, mouse_y), exit_rect):
+                        running = False
+                        next_state = EXIT
+                elif menu_state == PROLOGUE:
+                    if len(prologue) == 0 and current_line == "" and point_in_rect((mouse_x, mouse_y), prologue_play_rect):
+                        running = False
+                        next_state = MAIN_LOOP
+                    else:
+                        if current_line != "":
+                            dialog_display[len(dialog_display) - 1] += current_line
+                            current_line = ""
+                        prologue[0] = prologue[0][1:]
+                        while len(prologue[0]) != 0:
+                            dialog_display.append(prologue[0][0])
+                            prologue[0] = prologue[0][1:]
+                        prologue = prologue[1:]
+
+        if menu_state == PROLOGUE:
+            if len(prologue) != 0 or current_line != "":
+                if current_line == "":
+                    current_line = prologue[0][0]
+                    prologue[0] = prologue[0][1:]
+                    if len(prologue[0]) == 0:
+                        prologue = prologue[1:]
+                    dialog_display.append("")
+                dialog_timer += dt
+                if dialog_timer >= dialog_char_rate:
+                    dialog_timer -= dialog_char_rate
+                    dialog_display[len(dialog_display) - 1] += current_line[0]
+                    current_line = current_line[1:]
 
         # Render
         clear_display()
 
-        display.blit(title_text, (screen_center[0] - (title_text.get_width() // 2), int(DISPLAY_HEIGHT * 0.15)))
+        if menu_state == TITLE:
+            display.blit(title_text, (screen_center[0] - (title_text.get_width() // 2), int(DISPLAY_HEIGHT * 0.15)))
+            display.blit(play_text, (play_rect[0] + 10, play_rect[1] + 5))
+            pygame.draw.rect(display, WHITE, play_rect, not point_in_rect((mouse_x, mouse_y), play_rect))
+            display.blit(exit_text, (exit_rect[0] + 10, exit_rect[1] + 5))
+            pygame.draw.rect(display, WHITE, exit_rect, not point_in_rect((mouse_x, mouse_y), exit_rect))
+        elif menu_state == PROLOGUE:
+            for i in range(0, len(dialog_display)):
+                text = font_prologue.render(dialog_display[i], False, WHITE)
+                display.blit(text, (screen_center[0] - (text.get_width() // 2), 35 + (30 * i)))
+            if len(prologue) == 0 and current_line == "":
+                display.blit(play_text, (prologue_play_rect[0] + 10, prologue_play_rect[1] + 5))
+                pygame.draw.rect(display, WHITE, prologue_play_rect, not point_in_rect((mouse_x, mouse_y), prologue_play_rect))
 
         if show_fps:
             render_fps()
