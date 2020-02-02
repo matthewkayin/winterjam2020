@@ -148,18 +148,22 @@ class Animation():
         self.frame_duration = frame_duration
         self.index = 0
         self.timer = 0
+        self.looped = False
 
     def reset(self):
         self.index = 0
         self.timer = 0
 
     def update(self, dt):
+        if self.looped:
+            self.looped = False
         self.timer += dt
         if self.timer >= self.frame_duration:
             self.timer -= self.frame_duration
             self.index += 1
             if self.index >= self.frames:
                 self.index = 0
+                self.looped = True
 
     def get_image(self):
         return get_sprite(self.spritesheet, self.index, self.size)
@@ -242,10 +246,13 @@ def format_game_timer(game_timer):
     minutes = int(game_timer) // (60 * 60)
     frame_minutes = minutes * (60 * 60)
     seconds = (int(game_timer) - frame_minutes) // 60
-    if minutes >= 10:
-        return str(minutes) + ":" + str(seconds)
-    else:
-        return "0" + str(minutes) + ":" + str(seconds)
+    minutes_string = str(minutes)
+    if minutes < 10:
+        minutes_string = "0" + minutes_string
+    seconds_string = str(seconds)
+    if seconds < 10:
+        seconds_string = "0" + seconds_string
+    return minutes_string + ":" + seconds_string
 
 
 class Entity():
@@ -347,6 +354,8 @@ def game():
     npc_names = []
     npc_behaviors = []
     npc_animations = []
+    npc_sick_animations = []
+    npc_sick_counters = []
     npc_dialogs = []
     sick_dialogs = []
     cold_lines = []
@@ -355,22 +364,26 @@ def game():
     npcs.append(Entity((100, 160)))
     npcs[0].x, npcs[0].y = (1354, 3243)
     npc_behaviors.append([True, False])
-    npc_animations.append(Animation("bunny", (100, 160), 3, 16))
+    npc_animations.append(Animation("bunny2", (80, 160), 3, 16))
+    npc_sick_animations.append(Animation("bunny2_cough", (80, 160), 16, 16))
+    npc_sick_counters.append(random.randint(1, 6))
     npc_names.append("Bunny")
     npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
     sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
     cold_lines.append("it's just a cold")
-    blame_lines.append("it's the other guy")
+    blame_lines.append("yeah it's NAME")
 
     npcs.append(Entity((100, 160)))
     npcs[1].x, npcs[1].y = (1480, 2340)
     npc_behaviors.append([True, 0.5, (npcs[1].x, npcs[1].y), (1913, 2340)])
-    npc_animations.append(Animation("turtle", (100, 160), 4, 16))
-    npc_names.append("Turtle")
+    npc_animations.append(Animation("birdblue", (130, 130), 2, 16))
+    npc_sick_animations.append(Animation("birdblue_cough", (130, 130), 17, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird")
     npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
     sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
     cold_lines.append("it's just a cold")
-    blame_lines.append("it's the other guy")
+    blame_lines.append("yeah it's NAME")
 
     number_with_symptoms = 1
     symptoms_npcs = []
@@ -379,7 +392,7 @@ def game():
         while new_npc in symptoms_npcs:
             new_npc = random.randint(0, len(npcs) - 1)
         symptoms_npcs.append(new_npc)
-    sick_npc = symptoms_npcs[random.randint(0, number_with_symptoms)]
+    sick_npc = symptoms_npcs[random.randint(0, number_with_symptoms - 1)]
     number_with_blame = 1
     blame_npcs = []
     for i in range(0, number_with_blame):
@@ -387,13 +400,16 @@ def game():
         while new_npc in symptoms_npcs or new_npc in blame_npcs:
             new_npc = random.randint(0, len(npcs) - 1)
         blame_npcs.append(new_npc)
+    blame_pool = symptoms_npcs
+    for i in range(0, number_with_symptoms):
+        blame_pool.append(sick_npc)
     for i in range(0, len(npcs)):
         if i == sick_npc:
             npc_dialogs[i] = sick_dialogs[i]
         elif i in symptoms_npcs:
             npc_dialogs[i][2] = cold_lines[i]
         elif i in blame_npcs:
-            npc_dialogs[i][3] = blame_lines[i]
+            npc_dialogs[i][3] = blame_lines[i].replace("NAME", npc_names[blame_pool[random.randint(0, len(blame_pool) - 1)]])
     chosen_npc = -1
 
     success_message = "Wow you heckin did it you found the right boi. The town is saved, but he is dead, which is sad."
@@ -546,6 +562,7 @@ def game():
                             dialog_index = i
                             if len(npc_behaviors[i]) == 4:
                                 npc_animations[dialog_index].reset()
+                                npc_sick_animations[dialog_index].reset()
                             dialog = npc_dialogs[dialog_index][0]
                             dialog_buffer = split_dialog(dialog)
                             display_dialog_one = ""
@@ -622,6 +639,15 @@ def game():
                     npcs[i].update(dt)
                     npcs[i].check_collision(dt, player.get_rect())
                 if not (i == dialog_index and len(npc_behaviors[i]) == 4):
+                    if i in symptoms_npcs:
+                        if npc_sick_counters[i] == 0:
+                            npc_sick_animations[i].update(dt)
+                            if npc_sick_animations[i].looped:
+                                npc_sick_counters[i] = random.randint(1, 6)
+                        else:
+                            npc_animations[i].update(dt)
+                            if npc_animations[i].looped:
+                                npc_sick_counters[i] -= 1
                     npc_animations[i].update(dt)
                 if len(npc_behaviors[i]) != 2:
                     if npc_behaviors[i][0]:
@@ -717,7 +743,10 @@ def game():
                         flip_y = npcs[i].vy < 0
                 else:
                     flip_x, flip_y = npc_behaviors[i]
-                display.blit(pygame.transform.flip(npc_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
+                if i in symptoms_npcs and npc_sick_counters[i] == 0:
+                    display.blit(pygame.transform.flip(npc_sick_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
+                else:
+                    display.blit(pygame.transform.flip(npc_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
 
             if disp_dialog:
                 pygame.draw.rect(display, BLUE, (int(1280 * 0.1), 0, int(1280 * 0.8), 120))
