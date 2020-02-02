@@ -238,6 +238,16 @@ def get_point_angle(point1, point2):
     return angle
 
 
+def format_game_timer(game_timer):
+    minutes = int(game_timer) // (60 * 60)
+    frame_minutes = minutes * (60 * 60)
+    seconds = (int(game_timer) - frame_minutes) // 60
+    if minutes >= 10:
+        return str(minutes) + ":" + str(seconds)
+    else:
+        return "0" + str(minutes) + ":" + str(seconds)
+
+
 class Entity():
     def __init__(self, size):
 
@@ -354,6 +364,7 @@ def game():
     chosen_npc = -1
 
     success_message = "Wow you heckin did it you found the right boi. The town is saved, but he is dead, which is sad."
+    timeout_message = "You were unable to stop the disease in time. Now everybody's gonna die. Oops."
     failed_message = "Wow you fucking monster you actually killed him you killed him and he wasn't even the right one you sick fuck I hope you're happy."
     end_message = ""
     end_message_buffer = []
@@ -375,6 +386,8 @@ def game():
     map_colliders.append((1476, 3196, 1144, 900))
     map_colliders.append((0, -1, 4096, 1))
     map_colliders.append((0, 4096, 4096, 1))
+
+    game_timer = 0.5 * (60 * 60)
 
     print(sick_npc)
 
@@ -594,22 +607,54 @@ def game():
             if not disp_dialog:
                 camera_x, camera_y = player.get_x() + camera_offset_x + int((mouse_x - screen_center[0]) * mouse_sensitivity), player.get_y() + camera_offset_y + int((mouse_y - screen_center[1]) * mouse_sensitivity)
                 camera_x, camera_y = max(min(camera_x, 4096 - DISPLAY_WIDTH), 0), max(min(camera_y, 4096 - DISPLAY_HEIGHT), 0)
+
+            game_timer -= dt
+            if game_timer <= 0:
+                chosen_npc = -2
+                player_animation[0].reset()
+                end_message_buffer = split_dialog(timeout_message)
+                end_screen_surface = display.copy()
+                npc_target_x = screen_center[0] - (player.width // 2) + camera_x
+                npc_target_y = screen_center[1] - (player.height // 2) + camera_y
+                npc_x = player.x
+                npc_y = player.y
+                fade_alpha_inc_rate = 255 / (get_distance((npc_x, npc_y), (npc_target_x, npc_target_y)) / 3)
         else:
-            npc_target_x = screen_center[0] - (npcs[chosen_npc].width // 2) + camera_x
-            npc_target_y = screen_center[1] - (npcs[chosen_npc].height // 2) + camera_y
-            npc_x = npcs[chosen_npc].x
-            npc_y = npcs[chosen_npc].y
-            if get_distance((npc_x, npc_y), (npc_target_x, npc_target_y)) <= 10:
-                npcs[chosen_npc].x = npc_target_x
-                npcs[chosen_npc].y = npc_target_y
+            npc_target_x = 0
+            npc_target_y = 0
+            npc_x = 0
+            npc_y = 0
+            if chosen_npc == -2:
+                npc_target_x = screen_center[0] - (player.width // 2) + camera_x
+                npc_target_y = screen_center[1] - (player.height // 2) + camera_y
+                npc_x = player.x
+                npc_y = player.y
+            else:
+                npc_target_x = screen_center[0] - (npcs[chosen_npc].width // 2) + camera_x
+                npc_target_y = screen_center[1] - (npcs[chosen_npc].height // 2) + camera_y
                 npc_x = npcs[chosen_npc].x
                 npc_y = npcs[chosen_npc].y
+            if get_distance((npc_x, npc_y), (npc_target_x, npc_target_y)) <= 10:
+                if chosen_npc == -2:
+                    player.x = npc_target_x
+                    player.y = npc_target_y
+                    npc_x = player.x
+                    npc_y = player.y
+                else:
+                    npcs[chosen_npc].x = npc_target_x
+                    npcs[chosen_npc].y = npc_target_y
+                    npc_x = npcs[chosen_npc].x
+                    npc_y = npcs[chosen_npc].y
                 fade_alpha = 255
             if npc_x != npc_target_x or npc_y != npc_target_y:
                 distance_vector = (npc_target_x - npc_x, npc_target_y - npc_y)
                 move_speed = 3
-                npcs[chosen_npc].vx, npcs[chosen_npc].vy = scale_vector(distance_vector, move_speed)
-                npcs[chosen_npc].update(dt)
+                if chosen_npc == -2:
+                    player.vx, player.vy = scale_vector(distance_vector, move_speed)
+                    player.update(dt)
+                else:
+                    npcs[chosen_npc].vx, npcs[chosen_npc].vy = scale_vector(distance_vector, move_speed)
+                    npcs[chosen_npc].update(dt)
                 fade_alpha += fade_alpha_inc_rate
             else:
                 if len(end_message_buffer) != 0 or end_message != "":
@@ -663,13 +708,22 @@ def game():
                             pygame.draw.rect(display, BLUE, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
                             text = font_dialog.render(dialog_questions[i], False, WHITE)
                             display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
+
+            timer_color = YELLOW
+            if game_timer <= 3600:
+                timer_color = RED
+            text = font_dialog.render(format_game_timer(game_timer), False, RED)
+            display.blit(text, (0, 0))
         else:
             if fade_alpha < 255:
                 display.blit(end_screen_surface, (0, 0))
                 fade_surface = pygame.Surface((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.SRCALPHA)
                 fade_surface.fill((0, 0, 0, fade_alpha))
                 display.blit(fade_surface, (0, 0))
-            display.blit(npc_animations[chosen_npc].get_image(), (npcs[chosen_npc].get_x() - camera_x, npcs[chosen_npc].get_y() - camera_y))
+            if chosen_npc == -2:
+                display.blit(player_animation[0].get_image(), (player.get_x() - camera_x, player.get_y() - camera_y))
+            else:
+                display.blit(npc_animations[chosen_npc].get_image(), (npcs[chosen_npc].get_x() - camera_x, npcs[chosen_npc].get_y() - camera_y))
             for i in range(0, len(end_message_display)):
                 text = font_dialog.render(end_message_display[i], False, WHITE)
                 display.blit(text, (screen_center[0] - (text.get_width() // 2), 60 + (40 * i)))
@@ -741,9 +795,10 @@ def menu():
                         running = False
                         next_state = EXIT
                 elif menu_state == PROLOGUE:
-                    if len(prologue) == 0 and current_line == "" and point_in_rect((mouse_x, mouse_y), prologue_play_rect):
-                        running = False
-                        next_state = MAIN_LOOP
+                    if len(prologue) == 0 and current_line == "":
+                        if point_in_rect((mouse_x, mouse_y), prologue_play_rect):
+                            running = False
+                            next_state = MAIN_LOOP
                     else:
                         if current_line != "":
                             dialog_display[len(dialog_display) - 1] += current_line
