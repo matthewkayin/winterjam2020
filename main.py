@@ -172,8 +172,9 @@ class Animation():
 # Fonts
 font_small = pygame.font.SysFont("Serif", 11)
 font_dialog = pygame.font.Font("res/ttf/oxygen.ttf", 32)
+font_killbutton = pygame.font.Font("res/ttf/oxygen.ttf", 28)
 font_prologue = pygame.font.Font("res/ttf/oxygen.ttf", 26)
-font_title = pygame.font.Font("res/ttf/oxygen.ttf", 72)
+font_title = pygame.font.Font("res/ttf/Play-Regular.ttf", 72)
 
 
 def split_dialog(dialog):
@@ -354,6 +355,7 @@ def game():
     npc_names = []
     npc_behaviors = []
     npc_animations = []
+    npc_back_animations = []
     npc_sick_animations = []
     npc_sick_counters = []
     npc_dialogs = []
@@ -361,35 +363,193 @@ def game():
     cold_lines = []
     blame_lines = []
 
-    npcs.append(Entity((100, 160)))
-    npcs[0].x, npcs[0].y = (1354, 3243)
-    npc_behaviors.append([True, False])
-    npc_animations.append(Animation("bunny2", (80, 160), 3, 16))
-    npc_sick_animations.append(Animation("bunny2_cough", (80, 160), 16, 16))
+    npcs.append(Entity((120, 160)))
+    npcs[0].x, npcs[0].y = (2630, 2050)
+    npc_behaviors.append([False, False])
+    npc_animations.append(Animation("bernard", (120, 160), 3, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("bernard_cough", (120, 160), 15, 16))
     npc_sick_counters.append(random.randint(1, 6))
-    npc_names.append("Bunny")
+    npc_names.append("Bernard")
+    npc_dialogs.append(["Hmph! Yes? What is it?", "It’s been rough ever since the tree was taken down. Hardly Bigtree anymore, I say. Hmph!", "I’ve had some issues with my wrists, nothing major.", "Hmm yes everyone is saying Tweak is sick, but don’t listen to them; he’s always been that way."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((160, 160)))
+    npcs[1].x, npcs[1].y = (2840, 1620)
+    npc_behaviors.append([False, 0.5, (npcs[1].x, npcs[1].y), (2840, 3500)])
+    npc_animations.append(Animation("bird2", (160, 160), 2, 16))
+    npc_back_animations.append(Animation("bird2_back", (160, 160), 2, 16))
+    npc_sick_animations.append(Animation("bird2_cough", (160, 160), 17, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
     npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
     sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
     cold_lines.append("it's just a cold")
     blame_lines.append("yeah it's NAME")
 
-    npcs.append(Entity((100, 160)))
-    npcs[1].x, npcs[1].y = (1480, 2340)
-    npc_behaviors.append([True, 0.5, (npcs[1].x, npcs[1].y), (1913, 2340)])
+    npcs.append(Entity((130, 130)))
+    npcs[2].x, npcs[2].y = (850, 2800)
+    npc_behaviors.append([True, 0.5, (npcs[2].x, npcs[2].y), (2000, 2800)])
     npc_animations.append(Animation("birdblue", (130, 130), 2, 16))
+    npc_back_animations.append(None)
     npc_sick_animations.append(Animation("birdblue_cough", (130, 130), 17, 16))
     npc_sick_counters.append(random.randint(1, 6))
-    npc_names.append("Bird")
+    npc_names.append("Bird2")
     npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
     sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
     cold_lines.append("it's just a cold")
     blame_lines.append("yeah it's NAME")
 
-    number_with_symptoms = 1
+    npcs.append(Entity((100, 160)))
+    npcs[3].x, npcs[3].y = (3340, 2660)
+    npc_behaviors.append([True, False])
+    npc_animations.append(Animation("bunny", (100, 160), 3, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("bunny_cough", (100, 160), 21, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((80, 160)))
+    npcs[4].x, npcs[4].y = (810, 1440)
+    npc_behaviors.append([False, False])
+    npc_animations.append(Animation("bunny2", (80, 160), 3, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("bunny2_cough", (80, 160), 16, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((140, 160)))
+    npcs[5].x, npcs[5].y = (3350, 3600)
+    npc_behaviors.append([False, False])
+    npc_animations.append(Animation("crook", (140, 160), 13, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("crook_cough", (140, 160), 15, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((140, 160)))
+    npcs[6].x, npcs[6].y = (1725, 3010)
+    npc_behaviors.append([False, False])
+    npc_animations.append(Animation("dance", (140, 160), 4, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("dance_cough", (140, 160), 13, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((140, 160)))
+    npcs[7].x, npcs[7].y = (1680, 910)
+    npc_behaviors.append([False, False])
+    npc_animations.append(Animation("kitty", (140, 160), 4, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("kitty_cough", (140, 160), 16, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((120, 130)))
+    npcs[8].x, npcs[8].y = (630, 450)
+    npc_behaviors.append([False, False])
+    npc_animations.append(Animation("rat", (120, 130), 3, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(None)
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((100, 160)))
+    npcs[9].x, npcs[9].y = (1470, 2340)
+    npc_behaviors.append([True, 0.5, (npcs[9].x, npcs[9].y), (2410, 2340)])
+    npc_animations.append(Animation("turtle", (100, 160), 3, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("turtle_cough", (100, 160), 15, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((120, 160)))
+    npcs[10].x, npcs[10].y = (620, 3080)
+    npc_behaviors.append([False, 0.5, (npcs[10].x, npcs[10].y), (620, 3750)])
+    npc_animations.append(Animation("trench_front", (120, 160), 4, 16))
+    npc_back_animations.append(Animation("trench_back", (120, 160), 4, 16))
+    npc_sick_animations.append(Animation("trench_front_dizzy", (120, 160), 16, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((140, 160)))
+    npcs[11].x, npcs[11].y = (3350, 70)
+    npc_behaviors.append([False, False])
+    npc_animations.append(Animation("trashcan", (140, 160), 42, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("trashcan_cough", (140, 160), 44, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((100, 130)))
+    npcs[12].x, npcs[12].y = (1790, 1320)
+    npc_behaviors.append([True, 0.5, (npcs[12].x, npcs[12].y), (2530, 1320)])
+    npc_animations.append(Animation("mouse2", (100, 130), 4, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("mouse2_cough", (100, 130), 19, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    npcs.append(Entity((120, 130)))
+    npcs[13].x, npcs[13].y = (2140, 1130)
+    npc_behaviors.append([True, 0.5, (npcs[13].x, npcs[13].y), (3240, 1130)])
+    npc_animations.append(Animation("mask", (120, 130), 3, 16))
+    npc_back_animations.append(None)
+    npc_sick_animations.append(Animation("mask_angry", (120, 130), 18, 16))
+    npc_sick_counters.append(random.randint(1, 6))
+    npc_names.append("Bird2")
+    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("yeah it's NAME")
+
+    number_with_symptoms = 5
     symptoms_npcs = []
     for i in range(0, number_with_symptoms):
         new_npc = random.randint(0, len(npcs) - 1)
-        while new_npc in symptoms_npcs:
+        while new_npc in symptoms_npcs or new_npc == 8:
             new_npc = random.randint(0, len(npcs) - 1)
         symptoms_npcs.append(new_npc)
     sick_npc = symptoms_npcs[random.randint(0, number_with_symptoms - 1)]
@@ -401,8 +561,11 @@ def game():
             new_npc = random.randint(0, len(npcs) - 1)
         blame_npcs.append(new_npc)
     blame_pool = symptoms_npcs
+    tweak_blames = 3
     for i in range(0, number_with_symptoms):
         blame_pool.append(sick_npc)
+    for i in range(0, tweak_blames):
+        blame_pool.append(tweak_blames)
     for i in range(0, len(npcs)):
         if i == sick_npc:
             npc_dialogs[i] = sick_dialogs[i]
@@ -476,7 +639,7 @@ def game():
             elif event == ("kill", True):
                 if not kill_prompt and disp_dialog and dialog_one == "" and dialog_two == "" and len(dialog_buffer) == 0:
                     kill_prompt = True
-                    dialog_buffer = split_dialog("Are you sure you want to kill <Actually put NPC name here>?")
+                    dialog_buffer = split_dialog("Are you sure you want to kill NAME?".replace("NAME", npc_names[dialog_index]))
                     display_dialog_one = ""
                     display_dialog_two = ""
                     dialog_one = dialog_buffer[0]
@@ -526,7 +689,7 @@ def game():
                                 clicked_dialog = False
                                 for i in range(0, len(dialog_questions)):
                                     if point_in_rect((mouse_x, mouse_y), (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60)):
-                                        dialog_buffer = split_dialog(npc_dialogs[dialog_index][i + 1])
+                                        dialog_buffer = split_dialog(npc_names[dialog_index] + ": " + npc_dialogs[dialog_index][i + 1])
                                         display_dialog_one = ""
                                         display_dialog_two = ""
                                         dialog_one = dialog_buffer[0]
@@ -563,7 +726,7 @@ def game():
                             if len(npc_behaviors[i]) == 4:
                                 npc_animations[dialog_index].reset()
                                 npc_sick_animations[dialog_index].reset()
-                            dialog = npc_dialogs[dialog_index][0]
+                            dialog = npc_names[dialog_index] + ": " + npc_dialogs[dialog_index][0]
                             dialog_buffer = split_dialog(dialog)
                             display_dialog_one = ""
                             display_dialog_two = ""
@@ -640,15 +803,21 @@ def game():
                     npcs[i].check_collision(dt, player.get_rect())
                 if not (i == dialog_index and len(npc_behaviors[i]) == 4):
                     if i in symptoms_npcs:
-                        if npc_sick_counters[i] == 0:
-                            npc_sick_animations[i].update(dt)
-                            if npc_sick_animations[i].looped:
-                                npc_sick_counters[i] = random.randint(1, 6)
+                        if len(npc_behaviors[i]) == 4 and not npc_behaviors[i][0] and npcs[i].vy < 0:
+                            npc_back_animations[i].update(dt)
                         else:
-                            npc_animations[i].update(dt)
-                            if npc_animations[i].looped:
-                                npc_sick_counters[i] -= 1
-                    npc_animations[i].update(dt)
+                            if npc_sick_counters[i] == 0:
+                                npc_sick_animations[i].update(dt)
+                                if npc_sick_animations[i].looped:
+                                    npc_sick_counters[i] = random.randint(1, 6)
+                            else:
+                                npc_animations[i].update(dt)
+                                if npc_animations[i].looped:
+                                    npc_sick_counters[i] -= 1
+                    if len(npc_behaviors[i]) == 4 and not npc_behaviors[i][0] and npcs[i].vy < 0:
+                        npc_back_animations[i].update(dt)
+                    else:
+                        npc_animations[i].update(dt)
                 if len(npc_behaviors[i]) != 2:
                     if npc_behaviors[i][0]:
                         if npcs[i].vx > 0:
@@ -661,6 +830,17 @@ def game():
                                 npcs[i].vx *= -1
                         else:
                             npcs[i].vx = 1
+                    else:
+                        if npcs[i].vy > 0:
+                            if npcs[i].y >= npc_behaviors[i][3][1]:
+                                npcs[i].y = npc_behaviors[i][3][1]
+                                npcs[i].vy *= -1
+                        elif npcs[i].vy < 0:
+                            if npcs[i].y <= npc_behaviors[i][2][1]:
+                                npcs[i].y = npc_behaviors[i][2][1]
+                                npcs[i].vy *= -1
+                        else:
+                            npcs[i].vy = 1
 
             # update camera
             if not disp_dialog:
@@ -743,13 +923,16 @@ def game():
                         flip_y = npcs[i].vy < 0
                 else:
                     flip_x, flip_y = npc_behaviors[i]
-                if i in symptoms_npcs and npc_sick_counters[i] == 0:
+                if flip_y:
+                    display.blit(npc_back_animations[i].get_image(), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
+                elif i in symptoms_npcs and npc_sick_counters[i] == 0:
                     display.blit(pygame.transform.flip(npc_sick_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
                 else:
                     display.blit(pygame.transform.flip(npc_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
 
             if disp_dialog:
-                pygame.draw.rect(display, BLUE, (int(1280 * 0.1), 0, int(1280 * 0.8), 120))
+                # pygame.draw.rect(display, BLUE, (int(1280 * 0.1), 0, int(1280 * 0.8), 120))
+                display.blit(get_image("dialog", True), (int(1280 * 0.1), 0))
                 text_one = font_dialog.render(display_dialog_one, False, WHITE)
                 text_two = font_dialog.render(display_dialog_two, False, WHITE)
                 display.blit(text_one, (int(1280 * 0.1) + 22, 17))
@@ -759,15 +942,18 @@ def game():
                     if kill_prompt:
                         kill_prompt_questions = ["Yes", "No"]
                         for i in range(0, len(kill_prompt_questions)):
-                            pygame.draw.rect(display, RED, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
+                            # pygame.draw.rect(display, RED, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
+                            display.blit(get_image("text-buttons", True), (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i)))
                             text = font_dialog.render(kill_prompt_questions[i], False, WHITE)
                             display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
                     else:
-                        pygame.draw.rect(display, RED, (int(1280 * 0.65), DISPLAY_HEIGHT - 250 - 70, int(1280 * 0.25), 60))
-                        text = font_dialog.render("Press X to Kill", False, WHITE)
-                        display.blit(text, (int(1280 * 0.65) + 17, DISPLAY_HEIGHT - 250 - 70 + 10))
+                        # pygame.draw.rect(display, RED, (int(1280 * 0.65), DISPLAY_HEIGHT - 250 - 70, int(1280 * 0.25), 60))
+                        display.blit(get_image("killbutton", True), (int(1280 * 0.65), DISPLAY_HEIGHT - 250 - 70))
+                        text = font_killbutton.render("Press X to Kill", False, WHITE)
+                        display.blit(text, (int(1280 * 0.65) + 50, DISPLAY_HEIGHT - 250 - 70 + 10))
                         for i in range(0, len(dialog_questions)):
-                            pygame.draw.rect(display, BLUE, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
+                            # pygame.draw.rect(display, BLUE, (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i), int(1280 * 0.8), 60))
+                            display.blit(get_image("text-buttons", True), (int(1280 * 0.1), DISPLAY_HEIGHT - 250 + (70 * i)))
                             text = font_dialog.render(dialog_questions[i], False, WHITE)
                             display.blit(text, (int(1280 * 0.1) + 22, DISPLAY_HEIGHT - 250 + (70 * i) + 10))
 
@@ -845,6 +1031,8 @@ def menu():
 
     prologue_play_rect = (screen_center[0] - (play_text.get_width() // 2) - 10, int(DISPLAY_HEIGHT * 0.85) - 5, play_text.get_width() + 20, play_text.get_height() + 10)
 
+    print((prologue_play_rect[2], prologue_play_rect[3]))
+
     while running:
         handle_input()
         while len(input_queue) != 0:
@@ -889,6 +1077,7 @@ def menu():
         clear_display()
 
         if menu_state == TITLE:
+            display.blit(get_image("cover", False), (0, screen_center[1] - 360))
             display.blit(title_text, (screen_center[0] - (title_text.get_width() // 2), int(DISPLAY_HEIGHT * 0.15)))
             display.blit(play_text, (play_rect[0] + 10, play_rect[1] + 5))
             pygame.draw.rect(display, WHITE, play_rect, not point_in_rect((mouse_x, mouse_y), play_rect))
