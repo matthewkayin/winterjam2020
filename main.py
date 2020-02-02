@@ -474,7 +474,7 @@ def game():
     npc_back_animations.append(None)
     npc_sick_animations.append(None)
     npc_sick_counters.append(random.randint(1, 6))
-    npc_names.append("Bird2")
+    npc_names.append("Tweak")
     npc_dialogs.append(["W-w-w-what do you want?", "Oh well uh. Tree’s not very b-b-big, is it?", "Hmm? Symptoms? N-n-not me. Sh-shouldn’t listen to everyone you hear.", "I d-d-don’t know. But it’s not me, okay?"])
     sick_dialogs.append(["", "", "", ""])
     cold_lines.append("")
@@ -500,11 +500,11 @@ def game():
     npc_back_animations.append(Animation("trench_back", (120, 160), 4, 16))
     npc_sick_animations.append(Animation("trench_front_dizzy", (120, 160), 16, 16))
     npc_sick_counters.append(random.randint(1, 6))
-    npc_names.append("Bird2")
-    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
-    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
-    cold_lines.append("it's just a cold")
-    blame_lines.append("yeah it's NAME")
+    npc_names.append("Trent")
+    npc_dialogs.append(["*wheeze* You’re um, in my way.", "Alright, I suppose. *wheeze* Wish the air was better.", "I feel fine. Fine as I can, anyways.", "*wheeze* I’d say Tweak might be sick. *wheeze* Then again, Tweak always seems sick."])
+    sick_dialogs.append(["*wheeze* You’re hardly a sight for sore eyes. *cough* *cough*", "It’s dreadful here. *wheeze* I think the air is getting worse.", "Little lightheaded, maybe. *wheeze* Surely it’s just the air. *cough* *cough*", "*wheeze* I don’t know what you’re getting at, but if anyone *is* sick it isn’t me."])
+    cold_lines.append("*wheeze* I’m doing okay. Just a little lightheaded. Think I need to get a new mask.")
+    blame_lines.append("Yeah I *wheeze* heard that NAME’s down with a cold.")
 
     npcs.append(Entity((140, 160)))
     npcs[11].x, npcs[11].y = (3350, 70)
@@ -513,11 +513,11 @@ def game():
     npc_back_animations.append(None)
     npc_sick_animations.append(Animation("trashcan_cough", (140, 160), 44, 16))
     npc_sick_counters.append(random.randint(1, 6))
-    npc_names.append("Bird2")
-    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
-    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
-    cold_lines.append("it's just a cold")
-    blame_lines.append("yeah it's NAME")
+    npc_names.append("Ollie")
+    npc_dialogs.append(["Aye watch it!", "People have been throwing away amazing goodies lately.", "Why? You judging me for my life choices?", "My view of things here are pretty limited Sherlock."])
+    sick_dialogs.append(["Pshh! Get outta here!", "Wouldn’t you like to know..", "I’m in a trash bin, what do you expect?", "The only sick one here is you.."])
+    cold_lines.append("*clears throat* kek kek, Oh look! A penny!")
+    blame_lines.append("It has to be NAME, I saw ‘em throw away some empty med cases.")
 
     npcs.append(Entity((100, 130)))
     npcs[12].x, npcs[12].y = (1790, 1320)
@@ -526,11 +526,11 @@ def game():
     npc_back_animations.append(None)
     npc_sick_animations.append(Animation("mouse2_cough", (100, 130), 19, 16))
     npc_sick_counters.append(random.randint(1, 6))
-    npc_names.append("Bird2")
-    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
-    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
-    cold_lines.append("it's just a cold")
-    blame_lines.append("yeah it's NAME")
+    npc_names.append("Misty")
+    npc_dialogs.append(["Hi there! How are you?", "Today has been better than most days, better make the most out of it!", "Surprisingly no, usually I have allergies but not today.", "I’ve been too busy enjoying the day to notice anything like that."])
+    sick_dialogs.append(["Oh hello.", "It’s been too gloomy around here, people should be more positive.", "My allergies are acting up again, do you by chance have a tissue?", "I’ve just got out of bed so I haven't seen much people yet."])
+    cold_lines.append("I'm going to need twice as many tissues today..")
+    blame_lines.append("NAME has been grouchy lately, I should give them some space.")
 
     npcs.append(Entity((120, 130)))
     npcs[13].x, npcs[13].y = (2140, 1130)
@@ -539,11 +539,11 @@ def game():
     npc_back_animations.append(None)
     npc_sick_animations.append(Animation("mask_angry", (120, 130), 18, 16))
     npc_sick_counters.append(random.randint(1, 6))
-    npc_names.append("Bird2")
-    npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
-    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
-    cold_lines.append("it's just a cold")
-    blame_lines.append("yeah it's NAME")
+    npc_names.append("Saul")
+    npc_dialogs.append(["Oh hello hehe… Interested in purchasing something?", "Nothing’s better for business than an epidemic.", "No, I’ve got a steady supply of filters for these masks.", "Not that I know of, that Tweak guy is always over there twitching."])
+    sick_dialogs.append(["Urg.. you need something? My head can’t handle any lowballers, you hear?", "My filter guy is cheaping out on me..", "Why? Like you can help", "Everyone here is sick in any case.."])
+    cold_lines.append("Having a stuffy nose makes wearing this mask hard, but nothing I can’t handle.")
+    blame_lines.append("NAME has been buying lots of meds lately..hmm")
 
     number_with_symptoms = 5
     symptoms_npcs = []
@@ -575,9 +575,9 @@ def game():
             npc_dialogs[i][3] = blame_lines[i].replace("NAME", npc_names[blame_pool[random.randint(0, len(blame_pool) - 1)]])
     chosen_npc = -1
 
-    success_message = "Wow you heckin did it you found the right boi. The town is saved, but he is dead, which is sad."
-    timeout_message = "You were unable to stop the disease in time. Now everybody's gonna die. Oops."
-    failed_message = "Wow you fucking monster you actually killed him you killed him and he wasn't even the right one you sick fuck I hope you're happy."
+    success_message = "You found the sick person and the virus was stopped from spreading."
+    timeout_message = "You were unable to stop the virus in time."
+    failed_message = "You didn't choose carefully enough. The person you chose didn't have the virus."
     end_message = ""
     end_message_buffer = []
     end_message_display = []
