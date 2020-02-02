@@ -340,27 +340,60 @@ def game():
     dialog_char_rate = 4
 
     dialog_index = -1
-    dialog_questions = ["What is your name?", "Do you know who the heck has the corona virus?", "You wanna buy some deathsticks?"]
+    dialog_questions = ["How are things in Bigtree?", "Have you been experiencing any symptoms?", "Do you know of anyone who's gotten sick lately?"]
     kill_prompt = False
 
     npcs = []
+    npc_names = []
     npc_behaviors = []
     npc_animations = []
     npc_dialogs = []
+    sick_dialogs = []
+    cold_lines = []
+    blame_lines = []
 
     npcs.append(Entity((100, 160)))
     npcs[0].x, npcs[0].y = (1354, 3243)
     npc_behaviors.append([True, False])
     npc_animations.append(Animation("bunny", (100, 160), 3, 16))
+    npc_names.append("Bunny")
     npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("it's the other guy")
 
     npcs.append(Entity((100, 160)))
     npcs[1].x, npcs[1].y = (1480, 2340)
     npc_behaviors.append([True, 0.5, (npcs[1].x, npcs[1].y), (1913, 2340)])
     npc_animations.append(Animation("turtle", (100, 160), 4, 16))
+    npc_names.append("Turtle")
     npc_dialogs.append(["Hello frens I am a lil mouse what is your name? I need to add more characters so that we can test this. And this is the second sentence. I think we should add sentences like this seperately so as not to interrupt a sentance mid box. Actually just kidding.", "My name is bunny and I am a fren", "It's not heckin me lol pls no kill", "You don't want to sell me deathsticks."])
+    sick_dialogs.append(["sick line", "sick line", "sick line", "sick line"])
+    cold_lines.append("it's just a cold")
+    blame_lines.append("it's the other guy")
 
-    sick_npc = random.randint(0, len(npcs) - 1)
+    number_with_symptoms = 1
+    symptoms_npcs = []
+    for i in range(0, number_with_symptoms):
+        new_npc = random.randint(0, len(npcs) - 1)
+        while new_npc in symptoms_npcs:
+            new_npc = random.randint(0, len(npcs) - 1)
+        symptoms_npcs.append(new_npc)
+    sick_npc = symptoms_npcs[random.randint(0, number_with_symptoms)]
+    number_with_blame = 1
+    blame_npcs = []
+    for i in range(0, number_with_blame):
+        new_npc = random.randint(0, len(npcs) - 1)
+        while new_npc in symptoms_npcs or new_npc in blame_npcs:
+            new_npc = random.randint(0, len(npcs) - 1)
+        blame_npcs.append(new_npc)
+    for i in range(0, len(npcs)):
+        if i == sick_npc:
+            npc_dialogs[i] = sick_dialogs[i]
+        elif i in symptoms_npcs:
+            npc_dialogs[i][2] = cold_lines[i]
+        elif i in blame_npcs:
+            npc_dialogs[i][3] = blame_lines[i]
     chosen_npc = -1
 
     success_message = "Wow you heckin did it you found the right boi. The town is saved, but he is dead, which is sad."
@@ -387,7 +420,7 @@ def game():
     map_colliders.append((0, -1, 4096, 1))
     map_colliders.append((0, 4096, 4096, 1))
 
-    game_timer = 0.5 * (60 * 60)
+    game_timer = 10 * (60 * 60)
 
     print(sick_npc)
 
@@ -712,7 +745,7 @@ def game():
             timer_color = YELLOW
             if game_timer <= 3600:
                 timer_color = RED
-            text = font_dialog.render(format_game_timer(game_timer), False, RED)
+            text = font_dialog.render(format_game_timer(game_timer), False, timer_color)
             display.blit(text, (0, 0))
         else:
             if fade_alpha < 255:
