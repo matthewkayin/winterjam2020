@@ -1,0 +1,1 @@
+dialog_display[len(dialog_display) - 1] += current_line[0] @ line 1098
