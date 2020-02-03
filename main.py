@@ -560,17 +560,22 @@ def game():
         while new_npc in symptoms_npcs or new_npc in blame_npcs:
             new_npc = random.randint(0, len(npcs) - 1)
         blame_npcs.append(new_npc)
-    blame_pool = symptoms_npcs
-    for i in range(0, number_with_symptoms):
-        blame_pool.append(i)
+    blame_pool = []
+    for i in range(0, (number_with_blame // 2)):
         blame_pool.append(sick_npc)
+    while len(blame_pool) != number_with_blame:
+        possible_new = symptoms_npcs[random.randint(0, number_with_symptoms - 1)]
+        if possible_new not in blame_pool:
+            blame_pool.append(possible_new)
     for i in range(0, len(npcs)):
         if i == sick_npc:
             npc_dialogs[i] = sick_dialogs[i]
         elif i in symptoms_npcs:
             npc_dialogs[i][2] = cold_lines[i]
         elif i in blame_npcs:
-            npc_dialogs[i][3] = blame_lines[i].replace("NAME", npc_names[blame_pool[random.randint(0, len(blame_pool) - 1)]])
+            blame_index = random.randint(0, len(blame_pool) - 1)
+            npc_dialogs[i][3] = blame_lines[i].replace("NAME", npc_names[blame_pool[blame_index]])
+            del blame_pool[blame_index]
     chosen_npc = -1
 
     success_message = "Well done. NAME had the virus, and though the town scorns you for their death, you know that you've prevented many more deaths through your actions."
@@ -599,8 +604,6 @@ def game():
     map_colliders.append((0, 4096, 4096, 1))
 
     game_timer = 10 * (60 * 60)
-
-    print(sick_npc)
 
     while running:
         # Handle input
@@ -1043,20 +1046,18 @@ def menu():
     prologue = []
     prologue_text = "Panic sweeps the critter population as a deadly virus spreads from rodent to rodent. "
     prologue_text += "The Axeman Virus has no cure; only death can prevent its further spread among the population. "
-    prologue.append(split_dialog(prologue_text) + [""])
+    prologue.append(split_dialog(prologue_text) + [" "])
     prologue_text = "Faced with the end of the world, the Whisker's Health Organization fights a desperate struggle "
     prologue_text += "against an unstoppable plague and a rising death rate. "
     prologue_text += "Reports tell of an infected individual who has made their way to the city of Bigtree. "
     prologue_text += "To prevent further spread of the disease, the WHO has sent you to take this individual out. "
-    prologue.append(split_dialog(prologue_text) + [""])
+    prologue.append(split_dialog(prologue_text) + [" "])
     prologue_text = "Here, discretion is key. Individuals aren't likely to be forthcoming about their condition, "
     prologue_text += "and the visible symptoms of the disease are the same as those of a common cold. But a wrong "
     prologue_text += "decision would mean the needless death of innocents, and the disease waits for no one."
-    prologue.append(split_dialog(prologue_text) + [""])
+    prologue.append(split_dialog(prologue_text) + [" "])
 
-    prologue_play_rect = (screen_center[0] - (play_text.get_width() // 2) - 10, int(DISPLAY_HEIGHT * 0.85) - 5, play_text.get_width() + 20, play_text.get_height() + 10)
-
-    print((prologue_play_rect[2], prologue_play_rect[3]))
+    prologue_play_rect = (screen_center[0] - (play_text.get_width() // 2) - 10, int(DISPLAY_HEIGHT * 0.87) - 5, play_text.get_width() + 20, play_text.get_height() + 10)
 
     while running:
         handle_input()
@@ -1078,7 +1079,6 @@ def menu():
                         if current_line != "":
                             dialog_display[len(dialog_display) - 1] += current_line
                             current_line = ""
-                        prologue[0] = prologue[0][1:]
                         while len(prologue[0]) != 0:
                             dialog_display.append(prologue[0][0])
                             prologue[0] = prologue[0][1:]
@@ -1111,7 +1111,7 @@ def menu():
         elif menu_state == PROLOGUE:
             for i in range(0, len(dialog_display)):
                 text = font_prologue.render(dialog_display[i], False, WHITE)
-                display.blit(text, (screen_center[0] - (text.get_width() // 2), 35 + (30 * i)))
+                display.blit(text, (screen_center[0] - (text.get_width() // 2), 25 + (30 * i)))
             if len(prologue) == 0 and current_line == "":
                 display.blit(play_text, (prologue_play_rect[0] + 10, prologue_play_rect[1] + 5))
                 pygame.draw.rect(display, WHITE, prologue_play_rect, not point_in_rect((mouse_x, mouse_y), prologue_play_rect))
