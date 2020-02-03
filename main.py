@@ -524,7 +524,7 @@ def game():
     npc_behaviors.append([True, 0.5, (npcs[12].x, npcs[12].y), (2530, 1320)])
     npc_animations.append(Animation("mouse2", (100, 130), 4, 16))
     npc_back_animations.append(None)
-    npc_sick_animations.append(Animation("mouse2_cough", (100, 130), 19, 16))
+    npc_sick_animations.append(Animation("mouse2_cough", (100, 130), 18, 16))
     npc_sick_counters.append(random.randint(1, 6))
     npc_names.append("Misty")
     npc_dialogs.append(["Hi there! How are you?", "Today has been better than most days, better make the most out of it!", "Surprisingly no, usually I have allergies but not today.", "I’ve been too busy enjoying the day to notice anything like that."])
