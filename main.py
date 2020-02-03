@@ -258,7 +258,6 @@ def format_game_timer(game_timer):
 
 class Entity():
     def __init__(self, size):
-
         self.rotation = None
         self.offset_x = 0
         self.offset_y = 0
@@ -267,6 +266,7 @@ class Entity():
         self.width, self.height = size
         self.vx = 0
         self.vy = 0
+        self.hitbox_scale = 0.8
 
     def update(self, dt):
         self.x += self.vx * dt
@@ -279,7 +279,7 @@ class Entity():
         return int(round(self.y)) + self.offset_y
 
     def get_rect(self):
-        return (self.x, self.y, self.width, self.height)
+        return (self.x + int(self.width * (1 - self.hitbox_scale)), self.y + int(self.height * (1 - self.hitbox_scale)), int(self.width * self.hitbox_scale), int(self.height * self.hitbox_scale))
 
     def get_center(self):
         return (self.x + self.width // 2, self.y + self.height // 2)
@@ -538,7 +538,7 @@ def game():
     npc_animations.append(Animation("mask", (120, 130), 3, 16))
     npc_back_animations.append(None)
     npc_sick_animations.append(Animation("mask_angry", (120, 130), 18, 16))
-    npc_sick_counters.append(random.randint(1, 6))
+    npc_sick_counters.append(random.randint(1, 3))
     npc_names.append("Saul")
     npc_dialogs.append(["Oh hello hehe… Interested in purchasing something?", "Nothing’s better for business than an epidemic.", "No, I’ve got a steady supply of filters for these masks.", "Not that I know of, that Tweak guy is always over there twitching."])
     sick_dialogs.append(["Urg.. you need something? My head can’t handle any lowballers, you hear?", "My filter guy is cheaping out on me..", "Why? Like you can help", "Everyone here is sick in any case.."])
@@ -553,7 +553,7 @@ def game():
             new_npc = random.randint(0, len(npcs) - 1)
         symptoms_npcs.append(new_npc)
     sick_npc = symptoms_npcs[random.randint(0, number_with_symptoms - 1)]
-    number_with_blame = 1
+    number_with_blame = 7
     blame_npcs = []
     for i in range(0, number_with_blame):
         new_npc = random.randint(0, len(npcs) - 1)
@@ -561,11 +561,9 @@ def game():
             new_npc = random.randint(0, len(npcs) - 1)
         blame_npcs.append(new_npc)
     blame_pool = symptoms_npcs
-    tweak_blames = 3
     for i in range(0, number_with_symptoms):
+        blame_pool.append(i)
         blame_pool.append(sick_npc)
-    for i in range(0, tweak_blames):
-        blame_pool.append(tweak_blames)
     for i in range(0, len(npcs)):
         if i == sick_npc:
             npc_dialogs[i] = sick_dialogs[i]
@@ -575,9 +573,10 @@ def game():
             npc_dialogs[i][3] = blame_lines[i].replace("NAME", npc_names[blame_pool[random.randint(0, len(blame_pool) - 1)]])
     chosen_npc = -1
 
-    success_message = "You found the sick person and the virus was stopped from spreading."
-    timeout_message = "You were unable to stop the virus in time."
-    failed_message = "You didn't choose carefully enough. The person you chose didn't have the virus."
+    success_message = "Well done. NAME had the virus, and though the town scorns you for their death, you know that you've prevented many more deaths through your actions."
+    timeout_message = "Time's up! Discretion is important, but you needed move faster. Because of your delay, the virus spread to others and the contagion is now beyond your control."
+    failed_message = "You have failed. NAME was a perfectly healthy individual, and you killed them on false pretenses. Perhaps you should have used more discretion in your investigation."
+    failed_message_sick = "You have failed. While your guess was close, NAME merely had a common cold, and you killed them on false pretenses. Perhaps you should have used more discretion in your investigation."
     end_message = ""
     end_message_buffer = []
     end_message_display = []
@@ -666,9 +665,12 @@ def game():
                                         if i == 0:
                                             chosen_npc = dialog_index
                                             if chosen_npc == sick_npc:
-                                                end_message_buffer = split_dialog(success_message)
+                                                end_message_buffer = split_dialog(success_message.replace("NAME", npc_names[chosen_npc]))
                                             else:
-                                                end_message_buffer = split_dialog(failed_message)
+                                                if chosen_npc in symptoms_npcs:
+                                                    end_message_buffer = split_dialog(failed_message_sick.replace("NAME", npc_names[chosen_npc]))
+                                                else:
+                                                    end_message_buffer = split_dialog(failed_message.replace("NAME", npc_names[chosen_npc]))
                                             end_screen_surface = display.copy()
                                             fade_alpha = 0
                                             npc_target_x = screen_center[0] - (npcs[chosen_npc].width // 2) + camera_x
@@ -809,7 +811,7 @@ def game():
                             if npc_sick_counters[i] == 0:
                                 npc_sick_animations[i].update(dt)
                                 if npc_sick_animations[i].looped:
-                                    npc_sick_counters[i] = random.randint(1, 6)
+                                    npc_sick_counters[i] = random.randint(1, 3)
                             else:
                                 npc_animations[i].update(dt)
                                 if npc_animations[i].looped:
@@ -912,8 +914,31 @@ def game():
 
         if chosen_npc == -1:
             display.blit(get_image("background_scaled", False), (0 - camera_x, 0 - camera_y))
-            display.blit(pygame.transform.flip(player_animation[player_animation_index].get_image(), most_recent_dx < 0 and player_animation_index == 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
+            draw_before_npcs = []
+            draw_after_npcs = []
             for i in range(0, len(npcs)):
+                if npcs[i].y < player.y:
+                    draw_before_npcs.append(i)
+                else:
+                    draw_after_npcs.append(i)
+            for i in draw_before_npcs:
+                flip_x = False
+                flip_y = False
+                if len(npc_behaviors[i]) != 2:
+                    if npc_behaviors[i][0]:
+                        flip_x = npcs[i].vx < 0
+                    else:
+                        flip_y = npcs[i].vy < 0
+                else:
+                    flip_x, flip_y = npc_behaviors[i]
+                if flip_y:
+                    display.blit(npc_back_animations[i].get_image(), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
+                elif i in symptoms_npcs and npc_sick_counters[i] == 0:
+                    display.blit(pygame.transform.flip(npc_sick_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
+                else:
+                    display.blit(pygame.transform.flip(npc_animations[i].get_image(), flip_x, flip_y), (npcs[i].get_x() - camera_x, npcs[i].get_y() - camera_y))
+            display.blit(pygame.transform.flip(player_animation[player_animation_index].get_image(), most_recent_dx < 0 and player_animation_index == 0, False), (player.get_x() - camera_x, player.get_y() - camera_y))
+            for i in draw_after_npcs:
                 flip_x = False
                 flip_y = False
                 if len(npc_behaviors[i]) != 2:
