@@ -1,4 +1,9 @@
 # winterjam2020
-ICT Game Jam 2020
+Created for the ICT Game Jam Winter 2020
 
-To make executable, install pyinstaller then run "pyinstaller main.py --onefile --noconsole"
+Code by Matt Madden
+Background Art by Alex Crisler
+Character Art by Kenny Nguyen
+Music by Braden Schafer
+
+Executable download and game description at https://matthewkayin.itch.io/critter-contagion
